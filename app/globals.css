@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-display: "Bricolage Grotesque";
+  --font-sans: "IBM Plex Sans";
+  --font-mono: "IBM Plex Mono";
+}
+
+/* Signature route-motif animation (see components/RouteMotif.tsx) */
+.route-line {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: draw 1.7s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+.route-line:nth-of-type(1) { animation-delay: 0.10s; }
+.route-line:nth-of-type(2) { animation-delay: 0.28s; }
+.route-line:nth-of-type(3) { animation-delay: 0.46s; }
+.route-line:nth-of-type(4) { animation-delay: 0.64s; }
+
+.route-node { opacity: 0; animation: pop 0.5s ease forwards; }
+.route-node:nth-of-type(1) { animation-delay: 0.90s; }
+.route-node:nth-of-type(2) { animation-delay: 1.05s; }
+.route-node:nth-of-type(3) { animation-delay: 1.20s; }
+.route-node:nth-of-type(4) { animation-delay: 1.35s; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop  { to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .route-line { animation: none; stroke-dashoffset: 0; }
+  .route-node { animation: none; opacity: 1; }
+}

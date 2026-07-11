@@ -1,0 +1,143 @@
+import { redirect } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import VerifyToggle from "@/components/VerifyToggle";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { formatDate } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
+
+type Company = {
+  id: string;
+  company_name: string;
+  slug: string;
+  hq_country: string;
+  hq_city: string | null;
+  membership_tier: string;
+  is_verified: boolean;
+  is_published: boolean;
+  rating_avg: number;
+  rating_count: number;
+  created_at: string;
+};
+
+export default async function AdminPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: me } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (me?.role !== "admin") redirect("/");
+
+  // Admin client: see every company, including unpublished drafts.
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("forwarder_companies")
+    .select(
+      `id, company_name, slug, hq_country, hq_city, membership_tier,
+       is_verified, is_published, rating_avg, rating_count, created_at`
+    )
+    .order("created_at", { ascending: false });
+  const companies = (data ?? []) as Company[];
+
+  const queue = companies.filter((c) => c.is_published && !c.is_verified);
+  const rest = companies.filter((c) => !(c.is_published && !c.is_verified));
+
+  const stat = (label: string, value: number) => (
+    <div className="bg-mist rounded-lg p-3">
+      <p className="font-display font-bold text-xl">{value}</p>
+      <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">{label}</p>
+    </div>
+  );
+
+  const Row = ({ c }: { c: Company }) => (
+    <div className="flex flex-wrap items-center justify-between gap-3 border border-ink/10 bg-paper rounded-lg px-3.5 py-2.5">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <a
+            href={`/forwarders/${c.slug}`}
+            className="font-display font-semibold text-sm hover:text-sea"
+          >
+            {c.company_name}
+          </a>
+          {c.membership_tier === "premium" && (
+            <span className="font-mono text-[9px] uppercase text-ink bg-saffron/90 rounded px-1.5 py-0.5">
+              Premium
+            </span>
+          )}
+          {c.is_verified && (
+            <span className="font-mono text-[9px] uppercase text-tide border border-tide/40 rounded px-1.5 py-0.5">
+              ✓ Verified
+            </span>
+          )}
+          {!c.is_published && (
+            <span className="font-mono text-[9px] uppercase text-ink/50 border border-ink/20 rounded px-1.5 py-0.5">
+              Unlisted
+            </span>
+          )}
+        </div>
+        <p className="font-mono text-[11px] text-ink/50 mt-0.5">
+          {c.hq_city ? `${c.hq_city}, ` : ""}
+          {c.hq_country} · ★ {Number(c.rating_avg).toFixed(1)} ({c.rating_count}) · joined{" "}
+          {formatDate(c.created_at)}
+        </p>
+      </div>
+      <VerifyToggle forwarderId={c.id} verified={c.is_verified} />
+    </div>
+  );
+
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen px-5 py-10">
+        <div className="mx-auto max-w-3xl">
+          <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-saffron">
+            Admin
+          </p>
+          <h1 className="font-display font-bold text-3xl mt-1">Verification queue</h1>
+          <p className="text-sm text-ink/60 mt-1.5">
+            The ✓ badge tells shippers a company has been checked — licence, physical
+            presence, trade references. Grant it only after real diligence.
+          </p>
+
+          <div className="grid grid-cols-4 gap-3 mt-5">
+            {stat("Companies", companies.length)}
+            {stat("Published", companies.filter((c) => c.is_published).length)}
+            {stat("Premium", companies.filter((c) => c.membership_tier === "premium").length)}
+            {stat("Verified", companies.filter((c) => c.is_verified).length)}
+          </div>
+
+          <h2 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink/45 mt-8 mb-2">
+            Awaiting verification · {queue.length}
+          </h2>
+          <div className="space-y-2">
+            {queue.length === 0 && (
+              <p className="text-sm text-ink/50 border border-dashed border-ink/20 rounded-lg px-4 py-5 text-center">
+                Queue is clear.
+              </p>
+            )}
+            {queue.map((c) => (
+              <Row key={c.id} c={c} />
+            ))}
+          </div>
+
+          <h2 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink/45 mt-8 mb-2">
+            All companies · {rest.length}
+          </h2>
+          <div className="space-y-2">
+            {rest.map((c) => (
+              <Row key={c.id} c={c} />
+            ))}
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}

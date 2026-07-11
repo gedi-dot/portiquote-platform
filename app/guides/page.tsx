@@ -1,0 +1,54 @@
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+
+export const metadata = { title: "Freight Guides — N.K. Gedi & Co." };
+
+const GUIDES = [
+  {
+    href: "/guides/incoterms",
+    tag: "Commercial terms",
+    title: "Incoterms 2020, explained",
+    blurb: "All 11 terms — who pays, who insures, and exactly where risk transfers from seller to buyer.",
+  },
+  {
+    href: "/guides/container-specifications",
+    tag: "Equipment",
+    title: "Container specifications",
+    blurb: "20GP to 45HC and reefers: internal dimensions, door openings, max payload, and capacity in CBM.",
+  },
+  {
+    href: "/guides/imdg-classes",
+    tag: "Dangerous goods",
+    title: "IMDG hazard classes",
+    blurb: "The 9 classes of dangerous goods at sea, common examples, and what forwarders need from you.",
+  },
+];
+
+export default function GuidesPage() {
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen px-5 py-12">
+        <div className="mx-auto max-w-4xl">
+          <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-tide">Resources</p>
+          <h1 className="font-display font-bold text-3xl mt-1">Freight guides</h1>
+          <p className="text-ink/60 mt-2 max-w-xl">
+            Practical references written from the operations desk — the things shippers ask
+            forwarders every day.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-4 mt-8">
+            {GUIDES.map((g) => (
+              <Link key={g.href} href={g.href}
+                className="group bg-paper border border-ink/10 rounded-xl p-5 hover:border-tide/50 transition flex flex-col">
+                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-tide">{g.tag}</span>
+                <h2 className="font-display font-semibold text-lg mt-1.5 group-hover:text-sea transition">{g.title}</h2>
+                <p className="text-sm text-ink/60 mt-2 flex-1">{g.blurb}</p>
+                <span className="font-mono text-[11px] text-saffron mt-4">Read guide →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
