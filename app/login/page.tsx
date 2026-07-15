@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,8 +61,7 @@ export default function LoginPage() {
                 <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">Password</span>
                 <Link href="/forgot-password" className="text-xs text-sea hover:underline">Forgot password?</Link>
               </span>
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSignIn()}

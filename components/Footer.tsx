@@ -4,7 +4,7 @@ const COLS = [
   {
     head: "Platform",
     links: [
-      { href: "/", label: "Forwarder directory" },
+      { href: "/directory", label: "Forwarder directory" },
       { href: "/countries", label: "Browse by country" },
       { href: "/routes", label: "Shipping routes" },
       { href: "/rfq/new", label: "Post an RFQ" },

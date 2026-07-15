@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 const LINKS = [
-  { href: "/", label: "Directory" },
+  { href: "/directory", label: "Directory" },
   { href: "/countries", label: "Countries" },
   { href: "/routes", label: "Routes" },
   { href: "/guides", label: "Guides" },

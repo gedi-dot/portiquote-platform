@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import PasswordInput from "@/components/PasswordInput";
 
 type Phase = "checking" | "form" | "invalid" | "done";
 
@@ -77,8 +78,7 @@ export default function ResetPasswordPage() {
                 <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">
                   New password
                 </span>
-                <input
-                  type="password"
+                <PasswordInput
                   required
                   value={pw1}
                   onChange={(e) => setPw1(e.target.value)}
@@ -90,8 +90,7 @@ export default function ResetPasswordPage() {
                 <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">
                   Repeat new password
                 </span>
-                <input
-                  type="password"
+                <PasswordInput
                   required
                   value={pw2}
                   onChange={(e) => setPw2(e.target.value)}

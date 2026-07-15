@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -87,8 +88,7 @@ export default function SignupPage() {
                 </label>
                 <label className="block">
                   <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">Password</span>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="mt-1 w-full rounded-lg border border-ink/15 bg-white px-3 py-2.5 text-sm outline-none focus:border-tide"
