@@ -44,6 +44,11 @@ export default function ForwarderCard({ f }: { f: ForwarderListing }) {
             {[f.hq_city, f.hq_country].filter(Boolean).join(", ")}
           </p>
         </div>
+        {!f.is_claimed && (
+          <span className="shrink-0 font-mono text-[9px] uppercase tracking-wide text-ink/55 border border-ink/25 rounded px-1.5 py-0.5">
+            Unclaimed
+          </span>
+        )}
         {f.is_verified && (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-label="Verified">
             <path d="M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9L3.2 16l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z" fill="#16B3A6" />

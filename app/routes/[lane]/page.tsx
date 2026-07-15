@@ -59,7 +59,7 @@ export default async function LanePage({ params }: { params: Params }) {
       `modes,
        forwarder_companies!inner (
          id, company_name, slug, tagline, hq_country, hq_city, membership_tier,
-         is_verified, rating_avg, rating_count, logo_url,
+         is_verified, is_claimed, rating_avg, rating_count, logo_url,
          forwarder_services ( services ( slug, name ) ),
          forwarder_lanes ( origin_country, destination_country, modes )
        )`

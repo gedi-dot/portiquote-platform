@@ -14,7 +14,7 @@ type Params = Promise<{ slug: string }>;
 
 type Profile = {
   id: string;
-  owner_id: string;
+  owner_id: string | null;
   company_name: string;
   tagline: string | null;
   description: string | null;
@@ -28,6 +28,7 @@ type Profile = {
   whatsapp: string | null;
   membership_tier: "free" | "premium";
   is_verified: boolean;
+  is_claimed: boolean;
   rating_avg: number;
   rating_count: number;
   forwarder_services: { services: { name: string } | null }[];
@@ -87,7 +88,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
     .select(
       `id, owner_id, company_name, tagline, description, hq_country, hq_city,
        year_established, employee_count, website, email, phone, whatsapp,
-       membership_tier, is_verified, rating_avg, rating_count,
+       membership_tier, is_verified, is_claimed, rating_avg, rating_count,
        forwarder_services ( services ( name ) ),
        forwarder_lanes ( origin_country, destination_country, modes )`
     )
@@ -152,6 +153,22 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
         }}
       />
 
+      {!f.is_claimed && (
+        <div className="bg-parchment border-b border-ink/10">
+          <div className="mx-auto max-w-5xl px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-ink/70">
+              <span className="font-semibold text-ink">Unclaimed listing</span> — created from
+              public business information. Is this your company?
+            </p>
+            <Link
+              href={`/forwarders/${slug}/claim`}
+              className="bg-sea hover:brightness-110 transition text-paper text-sm font-semibold rounded-lg px-4 py-2"
+            >
+              Claim this listing — free
+            </Link>
+          </div>
+        </div>
+      )}
       {/* ---- Header ---- */}
       <section className="relative overflow-hidden bg-sea text-paper">
         <div
@@ -166,6 +183,11 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                 {f.membership_tier === "premium" && (
                   <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink bg-saffron rounded px-2 py-0.5">
                     Premium
+                  </span>
+                )}
+                {!f.is_claimed && (
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-paper/80 border border-paper/40 rounded px-2 py-0.5">
+                    Unclaimed
                   </span>
                 )}
                 {f.is_verified && (

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import VerifyToggle from "@/components/VerifyToggle";
+import ClaimActions from "@/components/ClaimActions";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDate } from "@/lib/format";
@@ -46,6 +47,27 @@ export default async function AdminPage() {
     )
     .order("created_at", { ascending: false });
   const companies = (data ?? []) as Company[];
+
+  type Claim = {
+    id: string;
+    role_at_company: string | null;
+    business_email: string | null;
+    phone: string | null;
+    evidence: string | null;
+    created_at: string;
+    forwarder_companies: { company_name: string; slug: string } | null;
+    claimant: { full_name: string | null; email: string | null } | null;
+  };
+  const { data: claimRows } = await admin
+    .from("listing_claims")
+    .select(
+      `id, role_at_company, business_email, phone, evidence, created_at,
+       forwarder_companies(company_name, slug),
+       claimant:profiles!listing_claims_claimant_id_fkey(full_name, email)`
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+  const claims = (claimRows ?? []) as unknown as Claim[];
 
   const queue = companies.filter((c) => c.is_published && !c.is_verified);
   const rest = companies.filter((c) => !(c.is_published && !c.is_verified));
@@ -112,6 +134,47 @@ export default async function AdminPage() {
             {stat("Published", companies.filter((c) => c.is_published).length)}
             {stat("Premium", companies.filter((c) => c.membership_tier === "premium").length)}
             {stat("Verified", companies.filter((c) => c.is_verified).length)}
+          </div>
+
+          <h2 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink/45 mt-8 mb-2">
+            Listing claims · {claims.length}
+          </h2>
+          <div className="space-y-2">
+            {claims.length === 0 && (
+              <p className="text-sm text-ink/50 border border-dashed border-ink/20 rounded-lg px-4 py-4 text-center">
+                No pending claims.
+              </p>
+            )}
+            {claims.map((cl) => (
+              <div key={cl.id} className="border border-saffron/50 bg-paper rounded-lg px-3.5 py-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-display font-semibold text-sm">
+                      {cl.forwarder_companies?.company_name ?? "Unknown listing"}
+                      <a
+                        href={`/forwarders/${cl.forwarder_companies?.slug ?? ""}`}
+                        className="font-sans font-normal text-xs text-sea hover:underline ml-2"
+                      >
+                        view listing →
+                      </a>
+                    </p>
+                    <p className="text-sm text-ink/70 mt-1">
+                      Claimed by <span className="font-medium text-ink">{cl.claimant?.full_name ?? "Unnamed"}</span>
+                      {cl.role_at_company ? ` (${cl.role_at_company})` : ""} · {cl.claimant?.email}
+                    </p>
+                    <p className="font-mono text-[11px] text-ink/55 mt-0.5">
+                      {cl.business_email && <>work: {cl.business_email} · </>}
+                      {cl.phone && <>tel: {cl.phone} · </>}
+                      filed {formatDate(cl.created_at)}
+                    </p>
+                    {cl.evidence && (
+                      <p className="text-xs text-ink/60 mt-1.5 border-l-2 border-ink/15 pl-2">{cl.evidence}</p>
+                    )}
+                  </div>
+                  <ClaimActions claimId={cl.id} />
+                </div>
+              </div>
+            ))}
           </div>
 
           <h2 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink/45 mt-8 mb-2">

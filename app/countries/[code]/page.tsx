@@ -39,7 +39,7 @@ export default async function CountryPage({
     .from("forwarder_companies")
     .select(
       `id, company_name, slug, tagline, hq_country, hq_city, membership_tier,
-       is_verified, rating_avg, rating_count, logo_url,
+       is_verified, is_claimed, rating_avg, rating_count, logo_url,
        forwarder_services ( services ( slug, name ) ),
        forwarder_lanes ( origin_country, destination_country, modes )`
     )
@@ -63,7 +63,7 @@ export default async function CountryPage({
       .from("forwarder_companies")
       .select(
         `id, company_name, slug, tagline, hq_country, hq_city, membership_tier,
-         is_verified, rating_avg, rating_count, logo_url,
+         is_verified, is_claimed, rating_avg, rating_count, logo_url,
          forwarder_services ( services ( slug, name ) ),
          forwarder_lanes ( origin_country, destination_country, modes )`
       )

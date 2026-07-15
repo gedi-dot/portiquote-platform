@@ -105,3 +105,16 @@ After deploying:
    guides already target evergreen freight searches
 5. Expect compounding, not fireworks: meaningful organic traffic typically
    takes 3–6 months after indexing begins
+
+## Claim-your-listing (migration 006)
+Pre-seed the directory with real forwarders from public business info, let
+them claim their profiles free. Research companies into
+`scripts/unclaimed-template.csv` (name, city, services, lanes — company-level
+public info only, no ratings, no personal data), then:
+```bash
+python3 scripts/seed-unclaimed.py your-research.csv > seed.sql
+```
+Run `seed.sql` in the Supabase SQL Editor. Listings appear with an
+"Unclaimed" badge and a claim button; claims land in `/admin` for hand
+verification (approve = ownership transfers + claimant emailed). Removal on
+request is one SQL delete.

@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   async function handleSignUp() {
     setLoading(true);
@@ -98,20 +99,28 @@ export default function SignupPage() {
 
               {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
 
+              <label className="mt-4 flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-[#0B4A54]"
+                />
+                <span className="text-xs text-ink/60 leading-relaxed">
+                  I have read and accept the{" "}
+                  <Link href="/terms" className="text-sea hover:underline">Terms of Service</Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-sea hover:underline">Privacy Policy</Link>.
+                </span>
+              </label>
+
               <button
                 onClick={handleSignUp}
-                disabled={loading}
+                disabled={loading || !agreed}
                 className="mt-5 w-full bg-sea hover:bg-ink transition text-paper font-semibold text-sm rounded-lg py-2.5 disabled:opacity-60"
               >
                 {loading ? "Creating account…" : "Create account"}
               </button>
-
-              <p className="mt-3 text-xs text-ink/45 text-center">
-                By creating an account you agree to our{" "}
-                <Link href="/terms" className="text-sea hover:underline">Terms of Service</Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-sea hover:underline">Privacy Policy</Link>.
-              </p>
 
               <p className="mt-4 text-sm text-ink/60 text-center">
                 Already have an account?{" "}

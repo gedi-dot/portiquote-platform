@@ -17,6 +17,7 @@ export type ForwarderListing = {
   hq_city: string | null;
   membership_tier: MembershipTier;
   is_verified: boolean;
+  is_claimed: boolean;
   rating_avg: number;
   rating_count: number;
   logo_url: string | null;
