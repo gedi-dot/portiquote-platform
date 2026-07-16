@@ -316,8 +316,8 @@ export default async function DashboardPage() {
                   {forwarder.membership_tier === "premium" ? (
                     <p className="font-mono text-[11px] text-ink/50 mt-0.5">
                       {subscriptionEnd
-                        ? `Renews ${formatDate(subscriptionEnd)} · KES 2,500/mo via M-Pesa`
-                        : "KES 2,500/mo via M-Pesa"}
+                        ? `Renews ${formatDate(subscriptionEnd)} · KES 2,500/mo`
+                        : "KES 2,500/mo"}
                     </p>
                   ) : (
                     <>

@@ -104,7 +104,7 @@ export default async function HomePage() {
             ["Reviews that build trust", "Every completed shipment can earn a rating. Reputation compounds where customers can see it."],
             ["The verified badge", "Hand-checked verification that tells shippers you're the real thing. Earned, never bought."],
             ["Instant leads with Premium", "Premium members are emailed every matching shipment the second it posts — and only they can quote."],
-            ["Pay with M-Pesa, monthly", "KES 2,500 a month, no contracts, cancel anytime. Priced for African SMEs, paid the way you already pay."],
+            ["Simple monthly pricing", "KES 2,500 a month, no contracts, cancel anytime. Priced for African SMEs, pay by M-Pesa or card."],
           ].map(([h, b]) => (
             <div key={h} className="bg-paper border border-ink/10 rounded-xl p-5">
               <h3 className="font-display font-semibold text-[15px]">{h}</h3>

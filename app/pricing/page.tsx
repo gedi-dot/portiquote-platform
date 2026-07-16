@@ -65,7 +65,7 @@ export default function PricingPage() {
                 ))}
               </ul>
               <Link href="/upgrade" className="block text-center mt-6 bg-saffron hover:brightness-95 transition text-ink font-semibold text-sm rounded-lg py-2.5">
-                Go Premium with M-Pesa
+                Go Premium
               </Link>
               <p className="text-xs text-ink/45 mt-2.5 text-center">30 days per payment · cancel anytime by not renewing</p>
             </div>

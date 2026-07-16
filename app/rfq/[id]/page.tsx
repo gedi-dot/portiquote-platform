@@ -354,7 +354,7 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
                     Quoting is a Premium feature
                   </p>
                   <p className="text-sm text-ink/60 mt-1.5">
-                    {myForwarder.company_name} has a free listing. Upgrade with M-Pesa to submit
+                    {myForwarder.company_name} has a free listing. Upgrade to Premium to submit
                     quotes and receive leads on your lanes.
                   </p>
                   <Link href="/upgrade" className="inline-block mt-3 bg-saffron hover:brightness-95 transition text-ink text-sm font-semibold rounded-lg px-4 py-2">
