@@ -8,7 +8,7 @@ export async function grantPremiumDays(
   opts: {
     profileId: string;
     forwarderId: string | null;
-    provider: "mpesa" | "stripe";
+    provider: "mpesa" | "stripe" | "paystack";
     days?: number;
   }
 ): Promise<string> {

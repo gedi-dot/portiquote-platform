@@ -97,7 +97,7 @@ export default function UpgradePage() {
   async function payCard() {
     if (!forwarder) return;
     setError(null);
-    const res = await fetch("/api/stripe/checkout", {
+    const res = await fetch("/api/paystack/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ forwarderId: forwarder.id }),
@@ -226,7 +226,7 @@ export default function UpgradePage() {
                   Pay with card (USD)
                 </button>
                 <p className="mt-2 text-xs text-ink/45 text-center">
-                  For members outside M-Pesa markets · Visa &amp; Mastercard via Stripe.
+                  For members outside Kenya · Visa &amp; Mastercard worldwide, plus mobile money across Africa, via Paystack.
                 </p>
               </>
             )}

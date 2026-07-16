@@ -1,0 +1,74 @@
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyPaystackSignature, verifyTransaction } from "@/lib/paystack";
+import { grantPremiumDays } from "@/lib/membership";
+
+export const runtime = "nodejs";
+
+// Paystack posts events here. Set the webhook URL in the Paystack dashboard to
+// {SITE}/api/paystack/webhook. Paystack signs with your SECRET key (HMAC-SHA512).
+export async function POST(request: Request) {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) {
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 501 });
+  }
+
+  const raw = await request.text();
+  if (!verifyPaystackSignature(raw, request.headers.get("x-paystack-signature"), secret)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  const event = JSON.parse(raw) as {
+    event: string;
+    data: { reference?: string; metadata?: Record<string, string> };
+  };
+
+  if (event.event !== "charge.success") {
+    return NextResponse.json({ received: true });
+  }
+
+  const reference = event.data.reference;
+  if (!reference) return NextResponse.json({ received: true });
+
+  // Never trust the webhook body alone — verify server-to-server before granting.
+  let verified;
+  try {
+    verified = await verifyTransaction(reference);
+  } catch {
+    return NextResponse.json({ received: true }); // will retry
+  }
+  if (verified.status !== "success") {
+    return NextResponse.json({ received: true });
+  }
+
+  const paymentId = verified.metadata?.payment_id;
+  if (!paymentId) return NextResponse.json({ received: true });
+
+  const admin = createAdminClient();
+  const { data: payment } = await admin
+    .from("payments")
+    .select("id, profile_id, forwarder_id, status")
+    .eq("id", paymentId)
+    .single();
+  if (!payment || payment.status !== "pending") {
+    return NextResponse.json({ received: true }); // unknown or already handled
+  }
+
+  await admin
+    .from("payments")
+    .update({
+      status: "success",
+      paystack_reference: reference,
+      provider_reference: reference,
+      paid_at: new Date().toISOString(),
+    })
+    .eq("id", payment.id);
+
+  await grantPremiumDays(admin, {
+    profileId: payment.profile_id,
+    forwarderId: payment.forwarder_id,
+    provider: "paystack",
+  });
+
+  return NextResponse.json({ received: true });
+}
