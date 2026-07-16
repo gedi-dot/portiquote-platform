@@ -1,23 +1,68 @@
 import Link from "next/link";
 import type { ForwarderListing } from "@/lib/types";
 
-// One dense, scannable line per forwarder — built for browsing hundreds.
+// Deterministic colour for the initials avatar (Monsoon Trade palette).
+const AVATAR_COLORS = ["#0B4A54", "#16B3A6", "#F2A83B", "#EF6A45", "#062A2E"];
+function avatarColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function initials(name: string): string {
+  const words = name.replace(/[^A-Za-z0-9 ]/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+// Normalise a website into a display host + safe href.
+function webParts(url: string | null): { host: string; href: string } | null {
+  if (!url) return null;
+  const href = url.startsWith("http") ? url : `https://${url}`;
+  try {
+    const host = new URL(href).hostname.replace(/^www\./, "");
+    return { host, href };
+  } catch {
+    return null;
+  }
+}
+
 export default function ForwarderRow({ f }: { f: ForwarderListing }) {
   const isPremium = f.membership_tier === "premium";
   const services = (f.forwarder_services ?? [])
     .map((s) => s.services?.name)
     .filter((n): n is string => Boolean(n))
-    .slice(0, 3);
+    .slice(0, 2);
   const place = [f.hq_city, f.hq_country].filter(Boolean).join(", ");
+  const web = webParts(f.website ?? null);
+  const phone = f.phone ?? null;
 
   return (
     <Link
       href={`/forwarders/${f.slug}`}
-      className={`group flex items-center gap-3 px-4 py-3 border-b border-ink/8 hover:bg-mist/60 transition ${
+      className={`group flex items-center gap-4 px-5 py-4 border-b border-ink/8 hover:bg-mist/60 transition ${
         isPremium ? "bg-saffron/[0.06]" : ""
       }`}
     >
-      {/* Name + premium/verified marks */}
+      {/* Logo / initials avatar */}
+      {f.logo_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={f.logo_url}
+          alt=""
+          className="shrink-0 w-11 h-11 rounded-lg object-cover border border-ink/10"
+        />
+      ) : (
+        <span
+          className="shrink-0 w-11 h-11 rounded-lg grid place-items-center font-display font-semibold text-[15px] text-paper"
+          style={{ backgroundColor: avatarColor(f.company_name) }}
+          aria-hidden="true"
+        >
+          {initials(f.company_name)}
+        </span>
+      )}
+
+      {/* Name + location + contact (stacked) */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="font-display font-semibold text-[15px] text-ink truncate group-hover:text-sea transition">
@@ -35,15 +80,21 @@ export default function ForwarderRow({ f }: { f: ForwarderListing }) {
             </svg>
           )}
         </div>
+        {/* Second line: location · phone · website (only what exists) */}
+        <div className="mt-0.5 flex items-center flex-wrap gap-x-2.5 gap-y-0.5 text-[12.5px] text-ink/55">
+          {place && (
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-saffron inline-block" />
+              {place}
+            </span>
+          )}
+          {phone && <span className="text-ink/60">{phone}</span>}
+          {web && <span className="text-sea truncate max-w-[180px]">{web.host}</span>}
+        </div>
       </div>
 
-      {/* Location */}
-      <span className="hidden sm:block shrink-0 w-40 truncate text-[13px] text-ink/60">
-        {place || "—"}
-      </span>
-
-      {/* Services */}
-      <span className="hidden md:block shrink-0 w-56 truncate text-[12px] text-ink/50">
+      {/* Services (desktop) */}
+      <span className="hidden lg:block shrink-0 w-52 truncate text-[12px] text-ink/50">
         {services.join(" · ") || "—"}
       </span>
 

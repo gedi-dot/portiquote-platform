@@ -21,6 +21,9 @@ export type ForwarderListing = {
   rating_avg: number;
   rating_count: number;
   logo_url: string | null;
+  website: string | null;
+  phone: string | null;
+  email: string | null;
   forwarder_services: ServiceRef[];
   forwarder_lanes: LaneRef[];
 };

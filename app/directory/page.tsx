@@ -14,7 +14,7 @@ export const metadata = {
   alternates: { canonical: "/directory" },
 };
 
-const PER_PAGE = 15;
+const PER_PAGE = 10;
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 function str(v: string | string[] | undefined): string | undefined {
@@ -46,7 +46,7 @@ export default async function DirectoryPage({
   const inMemoryFilter = Boolean(origin || destination || service);
 
   const selectCols = `id, company_name, slug, tagline, hq_country, hq_city, membership_tier,
-       is_verified, is_claimed, rating_avg, rating_count, logo_url,
+       is_verified, is_claimed, rating_avg, rating_count, logo_url, website, phone, email,
        forwarder_services ( services ( slug, name ) ),
        forwarder_lanes ( origin_country, destination_country, modes )`;
 
@@ -233,11 +233,11 @@ export default async function DirectoryPage({
         {forwarders.length > 0 ? (
           <>
             {/* Column headers (desktop) */}
-            <div className="hidden sm:flex items-center gap-3 px-4 py-2 border-b border-ink/15 font-mono text-[10px] tracking-[0.15em] uppercase text-ink/40">
-              <span className="flex-1">Company</span>
-              <span className="w-40">Location</span>
-              <span className="hidden md:block w-56">Services</span>
-              <span className="w-20 text-right">Rating</span>
+            <div className="hidden sm:flex items-center gap-4 px-5 py-2.5 border-b border-ink/15 font-mono text-[10px] tracking-[0.15em] uppercase text-ink/40">
+              <span className="w-11 shrink-0" />
+              <span className="flex-1">Company &amp; contact</span>
+              <span className="hidden lg:block w-52">Services</span>
+              <span className="w-20 text-right">Status</span>
             </div>
 
             <div className="bg-paper rounded-b-xl border-x border-b border-ink/10 overflow-hidden">
