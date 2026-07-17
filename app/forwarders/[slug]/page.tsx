@@ -116,12 +116,22 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
     .map((s) => s.services?.name)
     .filter((n): n is string => Boolean(n));
 
-  const contact = [
+  // Website is always public (it came from public directories and helps
+  // shippers find the company). Phone/email/WhatsApp are the payoff for
+  // claiming — shown only once a forwarder has claimed and owns the listing.
+  const publicContact = [
     f.website ? { label: "Website", value: f.website } : null,
-    f.email ? { label: "Email", value: f.email } : null,
-    f.phone ? { label: "Phone", value: f.phone } : null,
-    f.whatsapp ? { label: "WhatsApp", value: f.whatsapp } : null,
   ].filter((c): c is { label: string; value: string } => c !== null);
+
+  const privateContact = f.is_claimed
+    ? [
+        f.email ? { label: "Email", value: f.email } : null,
+        f.phone ? { label: "Phone", value: f.phone } : null,
+        f.whatsapp ? { label: "WhatsApp", value: f.whatsapp } : null,
+      ].filter((c): c is { label: string; value: string } => c !== null)
+    : [];
+
+  const contact = [...publicContact, ...privateContact];
 
   return (
     <>
@@ -337,6 +347,11 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                   </div>
                 ))}
               </div>
+              {!f.is_claimed && (f.email || f.phone || f.whatsapp) && (
+                <p className="mt-3 pt-3 border-t border-ink/8 text-xs text-ink/50">
+                  Phone and email are shown once this company claims its listing.
+                </p>
+              )}
             </div>
           )}
         </aside>
