@@ -5,6 +5,7 @@ import QuoteForm from "@/components/QuoteForm";
 import QuoteActions from "@/components/QuoteActions";
 import MessageThread from "@/components/MessageThread";
 import { createClient } from "@/lib/supabase/server";
+import RfqStatusActions from "@/components/RfqStatusActions";
 import { countryCode, modeLabel, formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -191,6 +192,8 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
                 </span>
               )}
             </div>
+
+            <RfqStatusActions rfqId={rfq.id} status={rfq.status} />
 
             {quotes.length === 0 ? (
               <div className="rounded-xl border border-dashed border-ink/20 bg-paper/50 px-6 py-12 text-center">
