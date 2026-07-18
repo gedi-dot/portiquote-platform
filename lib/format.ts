@@ -69,7 +69,9 @@ export const REGIONS: { name: string; countries: string[] }[] = [
 ];
 
 // Africa first, then the rest of the world — origins and destinations alike.
-export const COUNTRIES = [...AFRICA, ...EUROPE, ...ASIA, ...AMERICAS_OCEANIA];
+export const COUNTRIES = [...AFRICA, ...EUROPE, ...ASIA, ...AMERICAS_OCEANIA].sort((a, b) =>
+  a.localeCompare(b)
+);
 export const ORIGIN_COUNTRIES = COUNTRIES;
 export const DESTINATION_COUNTRIES = COUNTRIES;
 
