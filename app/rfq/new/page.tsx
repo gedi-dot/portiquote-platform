@@ -266,6 +266,16 @@ export default function NewRfqPage() {
             >
               {saving ? "Posting…" : "Post RFQ — forwarders will compete"}
             </button>
+
+            <p className="text-xs text-ink/55 leading-relaxed">
+              Your name, email and phone are shared with Premium forwarders who
+              cover this route, so they can send you a quote directly. They are
+              not shown publicly. See our{" "}
+              <a href="/privacy" className="text-sea underline">
+                Privacy Policy
+              </a>
+              .
+            </p>
           </div>
         </div>
       </div>
