@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import QuoteForm from "@/components/QuoteForm";
 import QuoteActions from "@/components/QuoteActions";
 import MessageThread from "@/components/MessageThread";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import RfqStatusActions from "@/components/RfqStatusActions";
 import { countryCode, modeLabel, formatDate } from "@/lib/format";
 
@@ -54,6 +54,9 @@ type Quote = {
     rating_avg: number;
     rating_count: number;
     membership_tier: string;
+    email: string | null;
+    phone: string | null;
+    whatsapp: string | null;
   } | null;
 };
 
@@ -93,11 +96,34 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
     .select(
       `id, forwarder_id, amount, currency, transit_time_days, valid_until, notes, status,
        forwarder_companies ( owner_id, company_name, slug, hq_city, hq_country,
-                             rating_avg, rating_count, membership_tier )`
+                             rating_avg, rating_count, membership_tier,
+                             email, phone, whatsapp )`
     )
     .eq("rfq_id", rfq.id)
     .order("amount", { ascending: true });
   const quotes = (quoteData ?? []) as unknown as Quote[];
+
+  // How many forwarders were alerted about this shipment: published Premium
+  // members whose lanes cover this corridor. Shown to the shipper so an empty
+  // page still tells them something true.
+  const { data: laneRows } = await supabase
+    .from("forwarder_lanes")
+    .select("forwarder_id")
+    .eq("origin_country", rfq.origin_country)
+    .eq("destination_country", rfq.destination_country);
+  const laneIds = [...new Set((laneRows ?? []).map((l) => l.forwarder_id))];
+  let notifiedCount = 0;
+  if (laneIds.length > 0) {
+    const { count } = await supabase
+      .from("forwarder_companies")
+      .select("id", { count: "exact", head: true })
+      .in("id", laneIds)
+      .eq("is_published", true)
+      .eq("membership_tier", "premium")
+      .not("owner_id", "is", null);
+    notifiedCount = count ?? 0;
+  }
+
 
   const isShipper = user.id === rfq.shipper_id;
 
@@ -116,6 +142,24 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
   const myQuote = myForwarder
     ? quotes.find((q) => q.forwarder_id === myForwarder!.id) ?? null
     : null;
+  // A Premium forwarder covering this lane gets the shipper's contact details,
+  // matching what the alert email sends them. Read with the admin client
+  // because profiles are private, then gated on those exact conditions.
+  let shipperContact: { full_name: string | null; email: string | null; phone: string | null } | null =
+    null;
+  const viewerMayContact =
+    Boolean(myForwarder) &&
+    myForwarder?.membership_tier === "premium" &&
+    laneIds.includes(myForwarder.id) &&
+    rfq.status === "open";
+  if (viewerMayContact && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const { data: sp } = await createAdminClient()
+      .from("profiles")
+      .select("full_name, email, phone")
+      .eq("id", rfq.shipper_id)
+      .single();
+    shipperContact = sp ?? null;
+  }
 
   const lowestId =
     quotes.filter((q) => q.status !== "withdrawn").length > 0
@@ -184,7 +228,13 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
           <>
             <div className="flex items-baseline justify-between mb-4">
               <h2 className="font-display font-semibold text-xl">
-                Quotes <span className="font-mono text-sm text-ink/50">({quotes.length})</span>
+                {quotes.length > 0 ? (
+                  <>
+                    Quotes <span className="font-mono text-sm text-ink/50">({quotes.length})</span>
+                  </>
+                ) : (
+                  "Your shipment"
+                )}
               </h2>
               {rfq.status === "awarded" && (
                 <span className="font-mono text-[11px] text-ink/50">
@@ -196,11 +246,16 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
             <RfqStatusActions rfqId={rfq.id} status={rfq.status} />
 
             {quotes.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-ink/20 bg-paper/50 px-6 py-12 text-center">
-                <p className="font-display font-semibold text-lg">No quotes yet</p>
+              <div className="rounded-xl border border-ink/10 bg-paper px-6 py-10 text-center">
+                <p className="font-display font-semibold text-lg">
+                  {notifiedCount > 0
+                    ? `${notifiedCount} forwarder${notifiedCount === 1 ? "" : "s"} notified`
+                    : "No forwarders cover this lane yet"}
+                </p>
                 <p className="mt-1.5 text-sm text-ink/60 max-w-md mx-auto">
-                  Premium forwarders on your lane can see this RFQ. Quotes usually arrive within
-                  hours — check back soon.
+                  {notifiedCount > 0
+                    ? "They have your shipment details and your contact, and will reach you directly by email or phone. Replies usually come within hours."
+                    : "No Premium members currently list this route. As more forwarders join, shipments like this reach them automatically."}
                 </p>
               </div>
             ) : (
@@ -250,6 +305,20 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
                             <p className="font-mono text-[11px] text-ink/55 mt-0.5">
                               <span className="text-saffron">★</span> {Number(fc.rating_avg).toFixed(1)} ({fc.rating_count}) ·{" "}
                               {[fc.hq_city, fc.hq_country].filter(Boolean).join(", ")}
+                            </p>
+                          )}
+                          {fc && (fc.email || fc.phone) && (
+                            <p className="font-mono text-[11px] mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                              {fc.email && (
+                                <a href={`mailto:${fc.email}`} className="text-sea hover:underline">
+                                  {fc.email}
+                                </a>
+                              )}
+                              {fc.phone && (
+                                <a href={`tel:${fc.phone}`} className="text-ink/65 hover:text-ink">
+                                  {fc.phone}
+                                </a>
+                              )}
                             </p>
                           )}
                           {q.notes && <p className="text-sm text-ink/60 mt-1.5 max-w-xl">{q.notes}</p>}
@@ -347,7 +416,48 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
 
             {myForwarder && !myQuote && rfq.status === "open" && (
               myForwarder.membership_tier === "premium" ? (
-                <QuoteForm rfqId={rfq.id} forwarderId={myForwarder.id} />
+                <div className="bg-paper rounded-xl border border-tide/40 ring-1 ring-tide/20 p-5">
+                  <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-tide">
+                    Contact the shipper
+                  </p>
+                  <p className="text-sm text-ink/70 mt-1.5 max-w-xl">
+                    Send your rate straight to them. Early replies win most jobs.
+                  </p>
+                  {shipperContact ? (
+                    <div className="mt-3 space-y-1.5 text-sm">
+                      {shipperContact.full_name && (
+                        <div className="flex justify-between gap-3">
+                          <span className="text-ink/50">Contact</span>
+                          <span className="font-medium">{shipperContact.full_name}</span>
+                        </div>
+                      )}
+                      {shipperContact.email && (
+                        <div className="flex justify-between gap-3">
+                          <span className="text-ink/50">Email</span>
+                          <a
+                            href={`mailto:${shipperContact.email}?subject=Quote for ${rfq.reference}`}
+                            className="font-medium text-sea hover:underline break-all text-right"
+                          >
+                            {shipperContact.email}
+                          </a>
+                        </div>
+                      )}
+                      {shipperContact.phone && (
+                        <div className="flex justify-between gap-3">
+                          <span className="text-ink/50">Phone</span>
+                          <a href={`tel:${shipperContact.phone}`} className="font-medium text-sea hover:underline">
+                            {shipperContact.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-ink/50">
+                      Contact details are sent to Premium members covering this lane. Add this
+                      route to your lanes to receive them.
+                    </p>
+                  )}
+                </div>
               ) : (
                 <div className="bg-parchment rounded-xl border border-saffron/40 p-5">
                   <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/50">

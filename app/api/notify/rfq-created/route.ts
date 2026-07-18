@@ -25,10 +25,7 @@ export async function POST(request: Request) {
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error("[rfq-created] SUPABASE_SERVICE_ROLE_KEY is not set");
-    return NextResponse.json(
-      { error: "Server not configured for notifications" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Not configured" }, { status: 500 });
   }
 
   const admin = createAdminClient();
@@ -41,17 +38,12 @@ export async function POST(request: Request) {
     )
     .eq("id", rfqId)
     .single();
+  // Only the shipper who posted it can trigger its notifications.
   if (rfqErr) {
     console.error("[rfq-created] rfq lookup failed:", rfqErr.message);
     return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
-  // Only the shipper who posted it can trigger its notifications.
   if (!rfq || rfq.shipper_id !== user.id) {
-    console.error("[rfq-created] not owner or missing", {
-      found: Boolean(rfq),
-      shipper: rfq?.shipper_id,
-      user: user.id,
-    });
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -188,10 +180,6 @@ export async function POST(request: Request) {
     }
   }
 
-  console.log(
-    `[rfq-created] ${rfq.reference}: ${mails.length} alert(s) — ` +
-      `${premiumOwners.length} premium, ${freeOwners.length} free`
-  );
   await sendEmails(mails);
   return NextResponse.json({
     ok: true,
