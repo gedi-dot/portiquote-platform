@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const LINKS = [
   { href: "/directory", label: "Directory" },
+  { href: "/board", label: "Board" },
   { href: "/countries", label: "Countries" },
   { href: "/routes", label: "Routes" },
   { href: "/guides", label: "Guides" },

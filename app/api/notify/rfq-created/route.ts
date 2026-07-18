@@ -25,7 +25,10 @@ export async function POST(request: Request) {
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error("[rfq-created] SUPABASE_SERVICE_ROLE_KEY is not set");
-    return NextResponse.json({ error: "Not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Server not configured for notifications" },
+      { status: 500 }
+    );
   }
 
   const admin = createAdminClient();
@@ -38,22 +41,19 @@ export async function POST(request: Request) {
     )
     .eq("id", rfqId)
     .single();
-  // Only the shipper who posted it can trigger its notifications.
   if (rfqErr) {
     console.error("[rfq-created] rfq lookup failed:", rfqErr.message);
     return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
+  // Only the shipper who posted it can trigger its notifications.
   if (!rfq || rfq.shipper_id !== user.id) {
+    console.error("[rfq-created] not owner or missing", {
+      found: Boolean(rfq),
+      shipper: rfq?.shipper_id,
+      user: user.id,
+    });
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-
-  // The shipper's own contact details — shared with Premium members so they
-  // can quote directly. Disclosed on the RFQ form before posting.
-  const { data: shipper } = await admin
-    .from("profiles")
-    .select("full_name, email, phone")
-    .eq("id", rfq.shipper_id)
-    .single();
 
   // Forwarders serving this corridor…
   const { data: lanes } = await admin
@@ -132,14 +132,6 @@ export async function POST(request: Request) {
     const isPremium = premiumOwners.includes(o.id);
 
     if (isPremium) {
-      // Full lead: shipment details + how to reach the shipper.
-      const contactRows =
-        `<table style="width:100%;border-collapse:collapse;">` +
-        (shipper?.full_name ? row("Contact", shipper.full_name) : "") +
-        (shipper?.email ? row("Email", shipper.email) : "") +
-        (shipper?.phone ? row("Phone", shipper.phone) : "") +
-        `</table>`;
-
       mails.push({
         to: o.email,
         subject: `New shipment on your lane · ${lane} · ${rfq.reference}`,
@@ -151,12 +143,9 @@ export async function POST(request: Request) {
             )}</strong></p>` +
             details +
             cargo +
-            `<div style="background:#F5EFE1;border-radius:10px;padding:14px 16px;margin-top:18px;">
-               <p style="margin:0 0 6px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#0B4A54;">Contact the shipper directly</p>
-               ${contactRows}
-             </div>
-             <p style="font-size:13px;color:#0B4A54;margin-top:16px;">Quote them directly by email or phone. Early replies win most jobs.</p>`,
-          ctaLabel: "View full shipment details",
+            `<p style="font-size:14px;color:#062A2E;margin-top:16px;">Submit your price on the shipment page. The shipper sees your quote alongside your company details and can reply to you directly.</p>
+             <p style="font-size:13px;color:#0B4A54;">Early quotes win most jobs.</p>`,
+          ctaLabel: "View & quote this shipment",
           ctaPath: `/rfq/${rfq.id}`,
         }),
       });
@@ -172,7 +161,7 @@ export async function POST(request: Request) {
               rfq.title
             )}</strong></p>` +
             details +
-            `<p style="font-size:14px;color:#062A2E;">Premium members receive the shipper's contact details and quote directly. Upgrade to see who posted this and reach them today.</p>`,
+            `<p style="font-size:14px;color:#062A2E;">Premium members can quote on shipments like this one. Upgrade to submit your price and be seen by the shipper.</p>`,
           ctaLabel: "Go Premium",
           ctaPath: `/upgrade`,
         }),
@@ -180,6 +169,10 @@ export async function POST(request: Request) {
     }
   }
 
+  console.log(
+    `[rfq-created] ${rfq.reference}: ${mails.length} alert(s) — ` +
+      `${premiumOwners.length} premium, ${freeOwners.length} free`
+  );
   await sendEmails(mails);
   return NextResponse.json({
     ok: true,

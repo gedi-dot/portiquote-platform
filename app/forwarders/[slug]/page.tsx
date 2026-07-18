@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ReviewForm from "@/components/ReviewForm";
+import ForwarderMessage from "@/components/ForwarderMessage";
 import { createClient } from "@/lib/supabase/server";
 import JsonLd from "@/components/JsonLd";
 import { countryCode, modeLabel, formatDate } from "@/lib/format";
@@ -111,6 +112,19 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
   } = await supabase.auth.getUser();
   const isOwner = user?.id === f.owner_id;
   const canReview = Boolean(user) && !isOwner;
+
+  // Forwarder-to-forwarder messaging: show a DM button only when the viewer
+  // runs their OWN (different) forwarder and this listing is claimed (has an
+  // owner to receive the message). Keeps messaging professional and spam-free.
+  let viewerRunsForwarder = false;
+  if (user && !isOwner && f.owner_id) {
+    const { data: myFwd } = await supabase
+      .from("forwarder_companies")
+      .select("id")
+      .eq("owner_id", user.id)
+      .maybeSingle();
+    viewerRunsForwarder = Boolean(myFwd);
+  }
 
   const services = f.forwarder_services
     .map((s) => s.services?.name)
@@ -351,6 +365,13 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                 <p className="mt-3 pt-3 border-t border-ink/8 text-xs text-ink/50">
                   Phone and email are shown once this company claims its listing.
                 </p>
+              )}
+              {viewerRunsForwarder && user && f.owner_id && (
+                <ForwarderMessage
+                  meId={user.id}
+                  otherUserId={f.owner_id}
+                  otherName={f.company_name}
+                />
               )}
             </div>
           )}
