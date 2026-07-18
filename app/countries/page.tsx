@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/server";
-import { REGIONS, countryCode } from "@/lib/format";
+import { REGIONS, countryCode, flagEmoji } from "@/lib/format";
 
 export const metadata = { title: "Forwarders by Country — N.K. Gedi & Co." };
 
@@ -36,7 +36,7 @@ export default async function CountriesPage() {
                 <span className="font-mono text-[11px] text-ink/40 ml-2">{region.countries.length} countries</span>
               </h2>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {region.countries.map((name) => {
+                {[...region.countries].sort((a, b) => a.localeCompare(b)).map((name) => {
                   const n = counts.get(name) ?? 0;
                   return (
                     <Link
@@ -45,8 +45,9 @@ export default async function CountriesPage() {
                       className="group flex items-center justify-between bg-paper border border-ink/10 rounded-lg px-3 py-2.5 hover:border-tide/50 transition"
                     >
                       <span className="text-sm text-ink/80 group-hover:text-ink truncate">
-                        <span className="font-mono text-[10px] text-sea mr-1.5">{countryCode(name)}</span>
+                        <span className="mr-1.5">{flagEmoji(name)}</span>
                         {name}
+                        <span className="font-mono text-[10px] text-ink/40 ml-1.5">{countryCode(name)}</span>
                       </span>
                       {n > 0 && (
                         <span className="font-mono text-[10px] text-ink bg-saffron/80 rounded px-1.5 py-0.5 shrink-0">{n}</span>

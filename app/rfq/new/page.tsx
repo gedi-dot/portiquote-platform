@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
-  COUNTRIES, FREIGHT_MODES, INCOTERMS, CONTAINER_TYPES, IMDG_CLASSES, countryCode,
+  COUNTRIES, FREIGHT_MODES, INCOTERMS, CONTAINER_TYPES, IMDG_CLASSES, countryCode, flagEmoji,
 } from "@/lib/format";
 
 const inputCls =
@@ -162,7 +162,7 @@ export default function NewRfqPage() {
                 <span className={labelCls}>Origin country *</span>
                 <select value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} className={inputCls}>
                   {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>{c} ({countryCode(c)})</option>
+                    <option key={c} value={c}>{flagEmoji(c)} {c} ({countryCode(c)})</option>
                   ))}
                 </select>
               </label>
@@ -175,7 +175,7 @@ export default function NewRfqPage() {
                 <select value={destCountry} onChange={(e) => setDestCountry(e.target.value)} className={inputCls}>
                   <option value="">Select…</option>
                   {COUNTRIES.map((c) => (
-                    <option key={c} value={c}>{c} ({countryCode(c)})</option>
+                    <option key={c} value={c}>{flagEmoji(c)} {c} ({countryCode(c)})</option>
                   ))}
                 </select>
               </label>

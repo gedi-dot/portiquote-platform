@@ -3,7 +3,7 @@ import ForwarderRow from "@/components/ForwarderRow";
 import DirectoryPager from "@/components/DirectoryPager";
 import RouteMotif from "@/components/RouteMotif";
 import { createClient } from "@/lib/supabase/server";
-import { ORIGIN_COUNTRIES, DESTINATION_COUNTRIES } from "@/lib/format";
+import { ORIGIN_COUNTRIES, DESTINATION_COUNTRIES, flagEmoji } from "@/lib/format";
 import type { ForwarderListing, ServiceOption } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -174,14 +174,14 @@ export default async function DirectoryPage({
                 <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">Origin</span>
                 <select name="origin" defaultValue={origin ?? ""} className="bg-transparent text-sm font-medium outline-none -ml-0.5">
                   <option value="">Any origin</option>
-                  {ORIGIN_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {ORIGIN_COUNTRIES.map((c) => <option key={c} value={c}>{flagEmoji(c)} {c}</option>)}
                 </select>
               </label>
               <label className="flex flex-col px-3 py-1.5 border-t sm:border-t-0 sm:border-l border-ink/10">
                 <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink/45">Destination</span>
                 <select name="destination" defaultValue={destination ?? ""} className="bg-transparent text-sm font-medium outline-none -ml-0.5">
                   <option value="">Any destination</option>
-                  {DESTINATION_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {DESTINATION_COUNTRIES.map((c) => <option key={c} value={c}>{flagEmoji(c)} {c}</option>)}
                 </select>
               </label>
               <label className="flex flex-col px-3 py-1.5 border-t sm:border-t-0 sm:border-l border-ink/10">

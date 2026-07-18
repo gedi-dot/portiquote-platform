@@ -46,6 +46,13 @@ export function countryCode(name: string): string {
   return CODES[name] ?? name.slice(0, 2).toUpperCase();
 }
 
+// Unicode flag emoji from the country's ISO code (regional indicators).
+export function flagEmoji(name: string): string {
+  const code = countryCode(name);
+  if (!/^[A-Z]{2}$/.test(code)) return "";
+  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+
 export function countryFromCode(code: string): string | null {
   const upper = code.toUpperCase();
   for (const [name, c] of Object.entries(CODES)) if (c === upper) return name;
