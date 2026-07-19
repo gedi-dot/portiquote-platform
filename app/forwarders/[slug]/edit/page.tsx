@@ -200,7 +200,7 @@ export default function EditForwarderPage({
               className="absolute inset-0"
               style={{
                 background:
-                  "radial-gradient(120% 120% at 10% 0%, #486071 0%, #22303C 100%)",
+                  "radial-gradient(120% 120% at 10% 0%, #0B4A54 0%, #062A2E 100%)",
               }}
             />
             <div className="relative">
@@ -348,7 +348,7 @@ export default function EditForwarderPage({
                 type="checkbox"
                 checked={isPublished}
                 onChange={(e) => setIsPublished(e.target.checked)}
-                className="w-4 h-4 accent-[#486071]"
+                className="w-4 h-4 accent-[#0B4A54]"
               />
               <span className="text-sm text-ink/70">
                 Listed in the public directory

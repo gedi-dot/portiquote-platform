@@ -136,9 +136,9 @@ export default function UpgradePage() {
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center gap-2.5 justify-center mb-8">
           <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="15" stroke="#486071" strokeWidth="1.5" />
-            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#EF7C9B" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="2.5" fill="#EF7C9B" />
+            <circle cx="16" cy="16" r="15" stroke="#0B4A54" strokeWidth="1.5" />
+            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#F2A83B" strokeWidth="1.5" />
+            <circle cx="16" cy="16" r="2.5" fill="#F2A83B" />
           </svg>
           <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
             N.K.&nbsp;Gedi&nbsp;&amp;&nbsp;Co.
@@ -150,7 +150,7 @@ export default function UpgradePage() {
           <div className="bg-sea text-paper px-6 py-5 relative overflow-hidden">
             <div
               className="absolute inset-0 opacity-90"
-              style={{ background: "radial-gradient(120% 120% at 10% 0%, #486071 0%, #22303C 100%)" }}
+              style={{ background: "radial-gradient(120% 120% at 10% 0%, #0B4A54 0%, #062A2E 100%)" }}
             />
             <div className="relative">
               <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-saffron">Membership</span>
@@ -254,7 +254,7 @@ export default function UpgradePage() {
               <div className="text-center py-4">
                 <div className="mx-auto w-12 h-12 rounded-full bg-tide/15 grid place-items-center">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12l4 4 10-10" stroke="#7FB8A4" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M5 12l4 4 10-10" stroke="#16B3A6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <p className="mt-4 font-display font-semibold text-lg">You&apos;re Premium</p>

@@ -5,14 +5,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Lake Magadi palette — slate & flamingo, from Kenya's soda lakes
-        ink:       "#22303C", // slate — primary text / darkest surface
-        sea:       "#486071", // steel blue — hero + dark surfaces
-        tide:      "#7FB8A4", // alkaline green — interactive / success accent
-        saffron:   "#EF7C9B", // flamingo — primary accent, CTAs
-        coral:     "#E0566B", // deep crimson-pink — errors / live states
-        parchment: "#F7F5F0", // salt — warm surface
-        mist:      "#ECEFEA", // pale mineral — cool page background
+        ink:       "#062A2E", // deepest ocean — primary text / darkest surface
+        sea:       "#0B4A54", // brand teal — hero + dark surfaces
+        tide:      "#16B3A6", // vivid turquoise — interactive / accent
+        saffron:   "#F2A83B", // spice-trade gold — primary warm accent
+        coral:     "#EF6A45", // rare pop — live / new states only
+        parchment: "#F5EFE1", // warm surface
+        mist:      "#E9F0EE", // cool page background
         paper:     "#FBFCFB", // near-white surface
       },
       fontFamily: {

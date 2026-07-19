@@ -22,10 +22,10 @@ export default async function Navbar() {
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="15" stroke="#486071" strokeWidth="1.5" />
-            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#EF7C9B" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="2.5" fill="#EF7C9B" />
-            <path d="M16 4 L16 8 M16 24 L16 28 M4 16 L8 16 M24 16 L28 16" stroke="#486071" strokeWidth="1.5" />
+            <circle cx="16" cy="16" r="15" stroke="#0B4A54" strokeWidth="1.5" />
+            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#F2A83B" strokeWidth="1.5" />
+            <circle cx="16" cy="16" r="2.5" fill="#F2A83B" />
+            <path d="M16 4 L16 8 M16 24 L16 28 M4 16 L8 16 M24 16 L28 16" stroke="#0B4A54" strokeWidth="1.5" />
           </svg>
           <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
             N.K.&nbsp;Gedi&nbsp;&amp;&nbsp;Co.

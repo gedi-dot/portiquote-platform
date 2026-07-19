@@ -151,7 +151,7 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
       <section className="relative overflow-hidden bg-sea text-paper">
         <div
           className="absolute inset-0"
-          style={{ background: "radial-gradient(120% 120% at 12% 0%, #486071 0%, #22303C 100%)" }}
+          style={{ background: "radial-gradient(120% 120% at 12% 0%, #0B4A54 0%, #062A2E 100%)" }}
         />
         <div className="relative mx-auto max-w-5xl px-5 py-8">
           <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">

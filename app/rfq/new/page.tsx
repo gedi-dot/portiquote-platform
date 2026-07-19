@@ -122,7 +122,7 @@ export default function NewRfqPage() {
           <div className="bg-sea text-paper px-6 py-5 relative overflow-hidden">
             <div
               className="absolute inset-0"
-              style={{ background: "radial-gradient(120% 120% at 10% 0%, #486071 0%, #22303C 100%)" }}
+              style={{ background: "radial-gradient(120% 120% at 10% 0%, #0B4A54 0%, #062A2E 100%)" }}
             />
             <div className="relative">
               <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-saffron">
