@@ -150,7 +150,7 @@ export default async function DirectoryPage({
       <section className="relative overflow-hidden bg-sea text-paper">
         <div
           className="absolute inset-0 opacity-90"
-          style={{ background: "radial-gradient(120% 100% at 15% 0%, #0B4A54 0%, #062A2E 100%)" }}
+          style={{ background: "radial-gradient(120% 100% at 15% 0%, #486071 0%, #22303C 100%)" }}
         />
         <RouteMotif />
         <div className="relative mx-auto max-w-6xl px-5 pt-14 pb-9">

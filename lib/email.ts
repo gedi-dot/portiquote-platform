@@ -38,18 +38,18 @@ export function emailShell(opts: {
 }): string {
   const cta =
     opts.ctaLabel && opts.ctaPath
-      ? `<a href="${SITE}${opts.ctaPath}" style="display:inline-block;margin-top:20px;background:#F2A83B;color:#062A2E;font-weight:600;font-size:14px;text-decoration:none;border-radius:8px;padding:11px 22px;">${opts.ctaLabel}</a>`
+      ? `<a href="${SITE}${opts.ctaPath}" style="display:inline-block;margin-top:20px;background:#EF7C9B;color:#22303C;font-weight:600;font-size:14px;text-decoration:none;border-radius:8px;padding:11px 22px;">${opts.ctaLabel}</a>`
       : "";
-  return `<!doctype html><html><body style="margin:0;background:#E9F0EE;font-family:Arial,Helvetica,sans-serif;">
+  return `<!doctype html><html><body style="margin:0;background:#ECEFEA;font-family:Arial,Helvetica,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:28px 16px;">
-    <div style="background:#0B4A54;border-radius:14px 14px 0 0;padding:22px 26px;">
-      <span style="color:#F2A83B;font-size:11px;letter-spacing:.18em;text-transform:uppercase;">N.K. Gedi &amp; Co.</span>
+    <div style="background:#486071;border-radius:14px 14px 0 0;padding:22px 26px;">
+      <span style="color:#EF7C9B;font-size:11px;letter-spacing:.18em;text-transform:uppercase;">N.K. Gedi &amp; Co.</span>
       <h1 style="color:#FBFCFB;font-size:21px;margin:8px 0 0;">${opts.heading}</h1>
     </div>
-    <div style="background:#FBFCFB;border-radius:0 0 14px 14px;padding:24px 26px;color:#062A2E;font-size:14px;line-height:1.6;">
+    <div style="background:#FBFCFB;border-radius:0 0 14px 14px;padding:24px 26px;color:#22303C;font-size:14px;line-height:1.6;">
       ${opts.bodyHtml}
       ${cta}
-      <p style="margin-top:26px;color:#062A2E;opacity:.45;font-size:12px;">Rooted in Africa. Moving cargo worldwide.<br>${SITE.replace(/^https?:\/\//, "")}</p>
+      <p style="margin-top:26px;color:#22303C;opacity:.45;font-size:12px;">Rooted in Africa. Moving cargo worldwide.<br>${SITE.replace(/^https?:\/\//, "")}</p>
     </div>
   </div></body></html>`;
 }

@@ -3,7 +3,7 @@ import type { ForwarderListing } from "@/lib/types";
 import { flagEmoji } from "@/lib/format";
 
 // Deterministic colour for the initials avatar (Monsoon Trade palette).
-const AVATAR_COLORS = ["#0B4A54", "#16B3A6", "#F2A83B", "#EF6A45", "#062A2E"];
+const AVATAR_COLORS = ["#486071", "#7FB8A4", "#EF7C9B", "#E0566B", "#22303C"];
 function avatarColor(name: string): string {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
@@ -76,7 +76,7 @@ export default function ForwarderRow({ f }: { f: ForwarderListing }) {
           )}
           {f.is_verified && (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-label="Verified" className="shrink-0">
-              <path d="M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9L3.2 16l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z" fill="#16B3A6" />
+              <path d="M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9L3.2 16l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z" fill="#7FB8A4" />
               <path d="M9 12l2 2 4-4" stroke="#FBFCFB" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 function Arcs() {
   return (
     <svg viewBox="0 0 460 360" fill="none" className="h-full w-auto" aria-hidden="true">
-      <circle cx="120" cy="230" r="10" stroke="#F2A83B" strokeWidth="2" />
+      <circle cx="120" cy="230" r="10" stroke="#EF7C9B" strokeWidth="2" />
       <circle cx="120" cy="230" r="3.5" fill="#FBFCFB" />
       {[
         "M120 230 C 200 60, 330 60, 420 90",
@@ -15,10 +15,10 @@ function Arcs() {
         "M120 230 C 210 300, 330 320, 430 300",
         "M120 230 C 150 120, 90 80, 40 60",
       ].map((d, i) => (
-        <path key={i} d={d} stroke="#F2A83B" strokeWidth="2" opacity={0.85 - i * 0.15} strokeLinecap="round" />
+        <path key={i} d={d} stroke="#EF7C9B" strokeWidth="2" opacity={0.85 - i * 0.15} strokeLinecap="round" />
       ))}
       {[[420, 90],[440, 200],[430, 300],[40, 60]].map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r="4.5" fill="#F2A83B" />
+        <circle key={i} cx={x} cy={y} r="4.5" fill="#EF7C9B" />
       ))}
     </svg>
   );
@@ -38,7 +38,7 @@ export default async function HomePage() {
       <Navbar />
 
       {/* ---- Hero ---- */}
-      <section className="relative overflow-hidden" style={{ background: "radial-gradient(130% 130% at 15% 0%, #0B4A54 0%, #062A2E 100%)" }}>
+      <section className="relative overflow-hidden" style={{ background: "radial-gradient(130% 130% at 15% 0%, #486071 0%, #22303C 100%)" }}>
         <div className="absolute right-[-40px] top-0 h-full w-[55%] opacity-70 pointer-events-none hidden sm:block">
           <Arcs />
         </div>

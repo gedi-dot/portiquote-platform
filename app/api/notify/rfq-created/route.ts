@@ -107,8 +107,8 @@ export async function POST(request: Request) {
 
   // Shared shipment summary table.
   const row = (label: string, value: string) =>
-    `<tr><td style="padding:5px 0;color:#0B4A54;font-size:13px;">${label}</td>` +
-    `<td style="padding:5px 0;text-align:right;font-size:13px;color:#062A2E;font-weight:600;">${escapeHtml(
+    `<tr><td style="padding:5px 0;color:#486071;font-size:13px;">${label}</td>` +
+    `<td style="padding:5px 0;text-align:right;font-size:13px;color:#22303C;font-weight:600;">${escapeHtml(
       value
     )}</td></tr>`;
 
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
     `</table>`;
 
   const cargo = rfq.cargo_description
-    ? `<p style="font-size:14px;color:#062A2E;">${escapeHtml(rfq.cargo_description)}</p>`
+    ? `<p style="font-size:14px;color:#22303C;">${escapeHtml(rfq.cargo_description)}</p>`
     : "";
 
   const mails: { to: string; subject: string; html: string }[] = [];
@@ -138,13 +138,13 @@ export async function POST(request: Request) {
         html: emailShell({
           heading: "New shipment on your lane",
           bodyHtml:
-            `<p style="font-size:15px;color:#062A2E;"><strong>${escapeHtml(
+            `<p style="font-size:15px;color:#22303C;"><strong>${escapeHtml(
               rfq.title
             )}</strong></p>` +
             details +
             cargo +
-            `<p style="font-size:14px;color:#062A2E;margin-top:16px;">Submit your price on the shipment page. The shipper sees your quote alongside your company details and can reply to you directly.</p>
-             <p style="font-size:13px;color:#0B4A54;">Early quotes win most jobs.</p>`,
+            `<p style="font-size:14px;color:#22303C;margin-top:16px;">Submit your price on the shipment page. The shipper sees your quote alongside your company details and can reply to you directly.</p>
+             <p style="font-size:13px;color:#486071;">Early quotes win most jobs.</p>`,
           ctaLabel: "View & quote this shipment",
           ctaPath: `/rfq/${rfq.id}`,
         }),
@@ -157,11 +157,11 @@ export async function POST(request: Request) {
         html: emailShell({
           heading: "A shipment matched your lane",
           bodyHtml:
-            `<p style="font-size:15px;color:#062A2E;"><strong>${escapeHtml(
+            `<p style="font-size:15px;color:#22303C;"><strong>${escapeHtml(
               rfq.title
             )}</strong></p>` +
             details +
-            `<p style="font-size:14px;color:#062A2E;">Premium members can quote on shipments like this one. Upgrade to submit your price and be seen by the shipper.</p>`,
+            `<p style="font-size:14px;color:#22303C;">Premium members can quote on shipments like this one. Upgrade to submit your price and be seen by the shipper.</p>`,
           ctaLabel: "Go Premium",
           ctaPath: `/upgrade`,
         }),

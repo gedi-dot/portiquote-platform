@@ -39,9 +39,9 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <Link href="/" className="flex items-center gap-2.5 justify-center mb-8">
           <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="15" stroke="#0B4A54" strokeWidth="1.5" />
-            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#F2A83B" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="2.5" fill="#F2A83B" />
+            <circle cx="16" cy="16" r="15" stroke="#486071" strokeWidth="1.5" />
+            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#EF7C9B" strokeWidth="1.5" />
+            <circle cx="16" cy="16" r="2.5" fill="#EF7C9B" />
           </svg>
           <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
             N.K.&nbsp;Gedi&nbsp;&amp;&nbsp;Co.
@@ -104,7 +104,7 @@ export default function SignupPage() {
                   type="checkbox"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 accent-[#0B4A54]"
+                  className="mt-0.5 w-4 h-4 accent-[#486071]"
                 />
                 <span className="text-xs text-ink/60 leading-relaxed">
                   I have read and accept the{" "}

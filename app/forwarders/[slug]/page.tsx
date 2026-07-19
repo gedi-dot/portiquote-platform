@@ -197,7 +197,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
       <section className="relative overflow-hidden bg-sea text-paper">
         <div
           className="absolute inset-0"
-          style={{ background: "radial-gradient(120% 120% at 12% 0%, #0B4A54 0%, #062A2E 100%)" }}
+          style={{ background: "radial-gradient(120% 120% at 12% 0%, #486071 0%, #22303C 100%)" }}
         />
         <div className="relative mx-auto max-w-5xl px-5 py-9">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -216,7 +216,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                 )}
                 {f.is_verified && (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-label="Verified">
-                    <path d="M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9L3.2 16l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z" fill="#16B3A6" />
+                    <path d="M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9L3.2 16l1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2z" fill="#7FB8A4" />
                     <path d="M9 12l2 2 4-4" stroke="#FBFCFB" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}

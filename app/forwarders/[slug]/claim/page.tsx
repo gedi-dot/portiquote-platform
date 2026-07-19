@@ -120,7 +120,7 @@ export default function ClaimListingPage({
               className="absolute inset-0"
               style={{
                 background:
-                  "radial-gradient(120% 120% at 10% 0%, #0B4A54 0%, #062A2E 100%)",
+                  "radial-gradient(120% 120% at 10% 0%, #486071 0%, #22303C 100%)",
               }}
             />
             <div className="relative">
@@ -160,7 +160,7 @@ export default function ClaimListingPage({
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M5 12l4 4 10-10"
-                      stroke="#16B3A6"
+                      stroke="#7FB8A4"
                       strokeWidth="2.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"

@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       subject: `New message from ${senderName}`,
       html: emailShell({
         heading: "You have a new message",
-        bodyHtml: `<p style="font-size:15px;color:#062A2E;"><strong>${escapeHtml(
+        bodyHtml: `<p style="font-size:15px;color:#22303C;"><strong>${escapeHtml(
           senderName
         )}</strong> sent you a direct message on the platform.</p>`,
         ctaLabel: "Read & reply",
