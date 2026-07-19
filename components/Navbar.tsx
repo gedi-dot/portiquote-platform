@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import MobileNav from "@/components/MobileNav";
 
 const LINKS = [
   { href: "/directory", label: "Directory" },
@@ -68,6 +69,7 @@ export default async function Navbar() {
               </Link>
             </>
           )}
+          <MobileNav links={LINKS} signedIn={Boolean(user)} />
         </div>
       </div>
     </header>
