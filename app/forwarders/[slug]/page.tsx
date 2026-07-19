@@ -6,7 +6,7 @@ import ReviewForm from "@/components/ReviewForm";
 import ForwarderMessage from "@/components/ForwarderMessage";
 import { createClient } from "@/lib/supabase/server";
 import JsonLd from "@/components/JsonLd";
-import { countryCode, modeLabel, formatDate } from "@/lib/format";
+import { countryCode, modeLabel, formatDate, flagEmoji } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -224,7 +224,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
               <p className="text-paper/70 text-sm mt-1.5 flex flex-wrap items-center gap-x-2">
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-saffron inline-block" />
-                  {[f.hq_city, f.hq_country].filter(Boolean).join(", ")}
+                  {flagEmoji(f.hq_country)} {[f.hq_city, f.hq_country].filter(Boolean).join(", ")}
                 </span>
                 {f.year_established && <span>· since {f.year_established}</span>}
                 {f.employee_count && <span>· {f.employee_count} staff</span>}

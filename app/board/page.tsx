@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/server";
-import { modeLabel, countryCode, formatDate } from "@/lib/format";
+import { modeLabel, countryCode, formatDate, flagEmoji } from "@/lib/format";
 
 // The live RFQ board. Every signed-in member can SEE open shipment requests.
 // Quoting is Premium-only — enforced in the database (quotes_insert RLS) and
@@ -175,13 +175,13 @@ export default async function BoardPage() {
                   {/* Lane */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
                     <span className="font-semibold text-ink">
-                      {[r.origin_city, r.origin_country].filter(Boolean).join(", ")}
+                      {flagEmoji(r.origin_country)} {[r.origin_city, r.origin_country].filter(Boolean).join(", ")}
                     </span>
                     <span className="text-tide font-mono">
                       {countryCode(r.origin_country)}→{countryCode(r.destination_country)}
                     </span>
                     <span className="font-semibold text-ink">
-                      {[r.destination_city, r.destination_country].filter(Boolean).join(", ")}
+                      {flagEmoji(r.destination_country)} {[r.destination_city, r.destination_country].filter(Boolean).join(", ")}
                     </span>
                   </div>
 

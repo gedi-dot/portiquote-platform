@@ -6,7 +6,7 @@ import QuoteActions from "@/components/QuoteActions";
 import MessageThread from "@/components/MessageThread";
 import { createClient } from "@/lib/supabase/server";
 import RfqStatusActions from "@/components/RfqStatusActions";
-import { countryCode, modeLabel, formatDate } from "@/lib/format";
+import { countryCode, modeLabel, formatDate, flagEmoji } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -165,8 +165,8 @@ export default async function RfqDetailPage({ params }: { params: Params }) {
             </span>
           </div>
           <h1 className="font-display font-bold text-xl sm:text-2xl mt-1.5">
-            {rfq.origin_city || rfq.origin_country} ({countryCode(rfq.origin_country)}) →{" "}
-            {rfq.destination_city || rfq.destination_country} ({countryCode(rfq.destination_country)})
+            {flagEmoji(rfq.origin_country)} {rfq.origin_city || rfq.origin_country} ({countryCode(rfq.origin_country)}) →{" "}
+            {flagEmoji(rfq.destination_country)} {rfq.destination_city || rfq.destination_country} ({countryCode(rfq.destination_country)})
           </h1>
           <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5">
             {facts.map((fact) => (

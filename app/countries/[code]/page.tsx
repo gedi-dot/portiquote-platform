@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ForwarderCard from "@/components/ForwarderCard";
 import { createClient } from "@/lib/supabase/server";
-import { countryFromCode, countryCode } from "@/lib/format";
+import { countryFromCode, countryCode, flagEmoji } from "@/lib/format";
 import type { ForwarderListing } from "@/lib/types";
 
 
@@ -84,6 +84,7 @@ export default async function CountryPage({
             ← All countries
           </Link>
           <div className="mt-4 flex items-baseline gap-3">
+            <span className="text-3xl" aria-hidden="true">{flagEmoji(country)}</span>
             <span className="font-mono text-sm text-sea bg-mist rounded px-2 py-1">{countryCode(country)}</span>
             <h1 className="font-display font-bold text-3xl">Freight forwarders in {country}</h1>
           </div>

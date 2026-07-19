@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ForwarderListing } from "@/lib/types";
+import { flagEmoji } from "@/lib/format";
 
 // Deterministic colour for the initials avatar (Monsoon Trade palette).
 const AVATAR_COLORS = ["#0B4A54", "#16B3A6", "#F2A83B", "#EF6A45", "#062A2E"];
@@ -84,7 +85,7 @@ export default function ForwarderRow({ f }: { f: ForwarderListing }) {
         <div className="mt-0.5 flex items-center flex-wrap gap-x-2.5 gap-y-0.5 text-[12.5px] text-ink/55">
           {place && (
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-saffron inline-block" />
+              <span aria-hidden="true">{f.hq_country ? flagEmoji(f.hq_country) : ""}</span>
               {place}
             </span>
           )}

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/server";
-import { countryCode, modeLabel, formatDate } from "@/lib/format";
+import { countryCode, modeLabel, formatDate, flagEmoji } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
@@ -196,8 +196,8 @@ export default async function DashboardPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">
                             {onMyLane(r) && <span className="text-saffron mr-1.5">●</span>}
-                            {r.origin_city || r.origin_country} ({countryCode(r.origin_country)}) →{" "}
-                            {r.destination_city || r.destination_country} ({countryCode(r.destination_country)})
+                            {flagEmoji(r.origin_country)} {r.origin_city || r.origin_country} ({countryCode(r.origin_country)}) →{" "}
+                            {flagEmoji(r.destination_country)} {r.destination_city || r.destination_country} ({countryCode(r.destination_country)})
                           </p>
                           <p className="font-mono text-[11px] text-ink/50 mt-0.5">
                             {r.reference} · {modeLabel(r.mode)}

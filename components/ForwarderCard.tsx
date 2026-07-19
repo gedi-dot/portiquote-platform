@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { flagEmoji } from "@/lib/format";
 import type { ForwarderListing } from "@/lib/types";
 import { countryCode } from "@/lib/format";
 
@@ -41,7 +42,7 @@ export default function ForwarderCard({ f }: { f: ForwarderListing }) {
           <h3 className="font-display font-semibold text-[17px] leading-snug">{f.company_name}</h3>
           <p className="mt-1 text-sm text-ink/60 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-saffron inline-block" />
-            {[f.hq_city, f.hq_country].filter(Boolean).join(", ")}
+            {f.hq_country ? `${flagEmoji(f.hq_country)} ` : ""}{[f.hq_city, f.hq_country].filter(Boolean).join(", ")}
           </p>
         </div>
         {!f.is_claimed && (

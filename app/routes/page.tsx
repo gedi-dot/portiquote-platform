@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/server";
-import { countryCode, COUNTRIES } from "@/lib/format";
+import { countryCode, COUNTRIES, flagEmoji } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +63,7 @@ export default async function RoutesPage() {
             {origins.map((o) => (
               <section key={o}>
                 <h2 className="font-display font-semibold text-lg">
-                  From {o}
+                  From {flagEmoji(o)} {o}
                   <span className="font-mono text-[11px] text-ink/45 ml-2">
                     {countryCode(o)}
                   </span>
@@ -78,7 +78,7 @@ export default async function RoutesPage() {
                         className="font-mono text-xs bg-paper border border-ink/10 hover:border-tide/60 rounded-lg px-3 py-1.5 text-sea transition"
                       >
                         {countryCode(o)} → {countryCode(d)}
-                        <span className="text-ink/50"> · {d}</span>
+                        <span className="text-ink/50"> · {flagEmoji(d)} {d}</span>
                       </Link>
                     ))}
                 </div>

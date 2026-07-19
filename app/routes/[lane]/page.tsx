@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import ForwarderCard from "@/components/ForwarderCard";
 import JsonLd from "@/components/JsonLd";
 import { createClient } from "@/lib/supabase/server";
-import { countryCode, countryFromCode, modeLabel } from "@/lib/format";
+import { countryCode, countryFromCode, modeLabel, flagEmoji } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import type { ForwarderListing } from "@/lib/types";
 
@@ -125,7 +125,7 @@ export default async function LanePage({ params }: { params: Params }) {
               Corridor · {oc} → {dc}
             </p>
             <h1 className="font-display font-bold text-3xl mt-1.5">
-              Shipping from {origin} to {destination}
+              Shipping from {flagEmoji(origin)} {origin} to {flagEmoji(destination)} {destination}
             </h1>
             <p className="text-paper/75 text-sm mt-2 max-w-2xl">
               {forwarders.length > 0
