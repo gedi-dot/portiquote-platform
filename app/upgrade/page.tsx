@@ -10,13 +10,6 @@ type Phase = "loading" | "no_forwarder" | "already" | "idle" | "prompted" | "con
 const PRICE = "2,500";
 
 export default function UpgradePage() {
-  const [approx, setApprox] = useState<string | null>(null);
-  useEffect(() => {
-    fetch("/api/rates?amount=2500")
-      .then((r) => r.json())
-      .then((d) => setApprox(d.approx ?? null))
-      .catch(() => {});
-  }, []);
   const [phase, setPhase] = useState<Phase>("loading");
   const [forwarder, setForwarder] = useState<Forwarder | null>(null);
   const [phone, setPhone] = useState("");
@@ -175,9 +168,6 @@ export default function UpgradePage() {
               <span className="font-display font-bold text-3xl text-ink">{PRICE}</span>
               <span className="text-ink/50 text-sm">/ month</span>
             </div>
-            {approx && (
-              <p className="mt-1 font-mono text-[11px] text-ink/45">{approx} / month · charged in KES</p>
-            )}
 
             {phase === "loading" && <p className="text-sm text-ink/50">Loading your listing…</p>}
 
