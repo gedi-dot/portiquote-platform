@@ -93,39 +93,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ---- Why forwarders join ---- */}
-      <section className="mx-auto max-w-6xl px-5 pt-14 pb-4">
-        <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-sea">Why forwarders join</p>
-        <h2 className="font-display font-bold text-2xl mt-2">Your digital storefront — free, forever</h2>
-        <div className="grid sm:grid-cols-3 gap-4 mt-6">
-          {[
-            ["Be found by real shippers", "Appear in searches for your lanes and services — the moment cargo owners look for a forwarder in your corridor."],
-            ["A profile you control", "Services, trade lanes, contacts, your story — updated by you in minutes, no webmaster needed."],
-            ["Reviews that build trust", "Every completed shipment can earn a rating. Reputation compounds where customers can see it."],
-            ["The verified badge", "Hand-checked verification that tells shippers you're the real thing. Earned, never bought."],
-            ["Instant leads with Premium", "Premium members are emailed every matching shipment the second it posts — and only they can quote."],
-            ["Simple monthly pricing", "KES 2,500 a month, no contracts, cancel anytime. Priced for African SMEs, pay by M-Pesa or card."],
-          ].map(([h, b]) => (
-            <div key={h} className="bg-paper border border-ink/10 rounded-xl p-5">
-              <h3 className="font-display font-semibold text-[15px]">{h}</h3>
-              <p className="text-sm text-ink/60 mt-1.5 leading-relaxed">{b}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ---- How it works ---- */}
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="grid sm:grid-cols-3 gap-6">
           {[
             ["01", "Post the shipment", "Lane, mode, cargo, Incoterm — a two-minute form. Free, always."],
-            ["02", "Forwarders compete", "Premium forwarders on that lane are notified instantly and quote."],
+            ["02", "Forwarders compete", "It appears on the live board and lands in matching forwarders' inboxes — Premium members quote."],
             ["03", "Compare & ship", "Quotes side by side, private messages, accept in one tap."],
           ].map(([n, h, b]) => (
             <div key={n}>
               <span className="font-display font-bold text-2xl text-tide">{n}</span>
               <h3 className="font-display font-semibold text-lg mt-1">{h}</h3>
               <p className="text-sm text-ink/60 mt-1">{b}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ---- Why forwarders join ---- */}
+      <section className="mx-auto max-w-6xl px-5 pt-14 pb-4">
+        <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-sea">Why forwarders join</p>
+        <h2 className="font-display font-bold text-2xl mt-2">Your digital storefront — free, forever</h2>
+        <div className="grid sm:grid-cols-2 gap-4 mt-6">
+          {[
+            ["Be found by real shippers", "Appear in searches for your lanes and services — the moment cargo owners look for a forwarder in your corridor."],
+            ["A profile you control", "Services, trade lanes, contacts, your story — updated by you in minutes, no webmaster needed."],
+            ["Reviews that build trust", "Every completed shipment can earn a rating. Reputation compounds where customers can see it."],
+            ["The verified badge", "Hand-checked verification that tells shippers you're the real thing. Earned, never bought."],
+          ].map(([h, b]) => (
+            <div key={h} className="bg-paper border border-ink/10 rounded-xl p-5">
+              <h3 className="font-display font-semibold text-[15px]">{h}</h3>
+              <p className="text-sm text-ink/60 mt-1.5 leading-relaxed">{b}</p>
             </div>
           ))}
         </div>
@@ -138,8 +136,9 @@ export default async function HomePage() {
             <div>
               <h2 className="font-display font-bold text-xl">Is your company already listed?</h2>
               <p className="text-sm text-ink/65 mt-1">
-                {unclaimed} Kenyan forwarders are in the directory from public records —
-                find yours and claim it free to take control of the profile.
+                {unclaimed} forwarders across Kenya, Tanzania, Uganda, Ethiopia, the
+                U.A.E. and China are listed from public records — find yours and claim
+                it free to take control of the profile.
               </p>
             </div>
             <Link href="/directory" className="bg-sea hover:brightness-110 transition text-paper font-semibold text-sm rounded-lg px-6 py-3">
@@ -172,17 +171,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ---- Final CTA ---- */}
-      <section className="relative overflow-hidden" style={{ background: "radial-gradient(130% 130% at 85% 100%, #0B4A54 0%, #062A2E 100%)" }}>
-        <div className="mx-auto max-w-6xl px-5 py-14 text-center">
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-paper">Ship Africa, worldwide — starting today.</h2>
-          <p className="text-paper/70 text-sm mt-2">Listing is free. Posting is free. The competition does the rest.</p>
-          <div className="mt-6 flex justify-center gap-3 flex-wrap">
-            <Link href="/signup" className="bg-saffron hover:brightness-95 transition text-ink font-semibold text-sm rounded-lg px-6 py-3.5">Join free</Link>
-            <Link href="/directory" className="border border-paper/40 hover:border-paper/80 transition text-paper font-medium text-sm rounded-lg px-6 py-3.5">Browse the directory</Link>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
