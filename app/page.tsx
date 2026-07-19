@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/server";
+import { kesApproxLine } from "@/lib/rates";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ function Arcs() {
 }
 
 export default async function HomePage() {
+  const approx = await kesApproxLine(2500);
   const supabase = await createClient();
   const [{ count: fwdCount }, { count: unclaimedCount }] = await Promise.all([
     supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true),
@@ -162,6 +164,7 @@ export default async function HomePage() {
           </div>
           <div className="bg-paper p-8 flex flex-col justify-center">
             <p className="font-display font-bold text-3xl">KES 2,500<span className="text-base font-medium text-ink/50"> / month</span></p>
+            {approx && <p className="font-mono text-[11px] text-ink/45 mt-0.5">{approx} / month · charged in KES</p>}
             <p className="text-sm text-ink/55 mt-1">M-Pesa or card · 30 days per payment · no auto-charge</p>
             <div className="flex gap-3 mt-5">
               <Link href="/upgrade" className="bg-saffron hover:brightness-95 transition text-ink font-semibold text-sm rounded-lg px-5 py-2.5">Go Premium</Link>

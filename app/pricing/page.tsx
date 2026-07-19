@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import { kesApproxLine } from "@/lib/rates";
 
 export const metadata = { title: "Pricing — N.K. Gedi & Co." };
 
@@ -17,7 +18,8 @@ const PREMIUM = [
   "Premium badge on your profile",
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const approx = await kesApproxLine(2500);
   return (
     <>
       <Navbar />
@@ -57,6 +59,11 @@ export default function PricingPage() {
                 <span className="font-display font-bold text-3xl">2,500</span>
                 <span className="text-ink/50 text-sm">/ month</span>
               </div>
+              {approx && (
+                <p className="mt-1 font-mono text-[11px] text-ink/45">
+                  {approx} / month · charged in KES
+                </p>
+              )}
               <ul className="mt-5 space-y-2.5 text-sm text-ink/75">
                 {PREMIUM.map((f) => (
                   <li key={f} className="flex gap-2">
