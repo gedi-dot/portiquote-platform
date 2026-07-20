@@ -5,6 +5,24 @@ export const metadata = { title: "Freight Guides — N.K. Gedi & Co." };
 
 const GUIDES = [
   {
+    href: "/guides/import-car-japan-kenya",
+    tag: "Japan → Kenya · RoRo",
+    title: "Importing a car from Japan to Mombasa",
+    blurb: "The 8-year rule, the full KRA duty stack on CRSP value, KEBS inspection, and why cheap cars don't mean cheap duty.",
+  },
+  {
+    href: "/guides/china-to-kenya-shipping",
+    tag: "China → Kenya",
+    title: "Shipping from China to Kenya",
+    blurb: "Ports, realistic transit times, FCL vs LCL vs air, the documents customs wants, and where importers lose money.",
+  },
+  {
+    href: "/guides/fcl-vs-lcl",
+    tag: "Ocean freight",
+    title: "FCL vs LCL: which should you ship?",
+    blurb: "The volume break-even, the destination charges LCL quotes leave out, and a simple rule for deciding.",
+  },
+  {
     href: "/guides/incoterms",
     tag: "Commercial terms",
     title: "Incoterms 2020, explained",
