@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
-export const dynamic = "force-dynamic";
 
 function Arcs() {
   return (
@@ -24,8 +23,10 @@ function Arcs() {
   );
 }
 
+export const revalidate = 300; // speed pass: cached, refreshed every 300s
+
 export default async function HomePage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const [{ count: fwdCount }, { count: unclaimedCount }] = await Promise.all([
     supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true),
     supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true).eq("is_claimed", false),

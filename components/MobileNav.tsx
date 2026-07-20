@@ -1,19 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 // Mobile navigation: hamburger toggle + dropdown panel. Rendered by the
 // server Navbar below md; receives auth state as a prop so it stays a
 // simple client island.
 export default function MobileNav({
   links,
-  signedIn,
 }: {
   links: { href: string; label: string }[];
-  signedIn: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
+      setSignedIn(Boolean(session))
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   return (
     <div className="md:hidden">

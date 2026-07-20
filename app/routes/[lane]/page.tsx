@@ -4,12 +4,11 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ForwarderCard from "@/components/ForwarderCard";
 import JsonLd from "@/components/JsonLd";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { countryCode, countryFromCode, modeLabel, flagEmoji } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import type { ForwarderListing } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
 
 type Params = Promise<{ lane: string }>;
 
@@ -22,12 +21,14 @@ function parseLane(lane: string): { origin: string; destination: string } | null
   return { origin, destination };
 }
 
+export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { lane } = await params;
   const parsed = parseLane(lane);
   if (!parsed) return {};
   const { origin, destination } = parsed;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { count } = await supabase
     .from("forwarder_lanes")
     .select("id, forwarder_companies!inner(id)", { count: "exact", head: true })
@@ -52,7 +53,7 @@ export default async function LanePage({ params }: { params: Params }) {
   const oc = countryCode(origin);
   const dc = countryCode(destination);
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: rows } = await supabase
     .from("forwarder_lanes")
     .select(

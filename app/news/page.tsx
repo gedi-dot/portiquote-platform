@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/format";
+
+export const revalidate = 86400; // speed pass: cached, refreshed every 86400s
 
 export const metadata = { title: "News & Insights — N.K. Gedi & Co." };
 
 export default async function NewsPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: posts } = await supabase
     .from("posts")
     .select("id, title, slug, excerpt, type, published_at, created_at")

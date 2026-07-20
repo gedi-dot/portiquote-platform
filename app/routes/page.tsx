@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { countryCode, COUNTRIES, flagEmoji } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+
+export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
 
 export const metadata: Metadata = {
   title: "Trade Routes & Shipping Corridors",
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RoutesPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("forwarder_lanes")
     .select("origin_country, destination_country, forwarder_companies!inner(id)")

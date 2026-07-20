@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { REGIONS, countryCode, flagEmoji } from "@/lib/format";
+
+export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
 
 export const metadata = { title: "Forwarders by Country — N.K. Gedi & Co." };
 
 export default async function CountriesPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("forwarder_companies")
     .select("hq_country")

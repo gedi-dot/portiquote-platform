@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ForwarderCard from "@/components/ForwarderCard";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { countryFromCode, countryCode, flagEmoji } from "@/lib/format";
 import type { ForwarderListing } from "@/lib/types";
 
+
+export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
 
 export async function generateMetadata({
   params,
@@ -32,7 +34,7 @@ export default async function CountryPage({
   const country = countryFromCode(code);
   if (!country) notFound();
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Forwarders headquartered in this country
   const { data: based } = await supabase

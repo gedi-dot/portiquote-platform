@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import MobileNav from "@/components/MobileNav";
+import AuthNavLinks from "@/components/AuthNavLinks";
 
 const LINKS = [
   { href: "/directory", label: "Directory" },
@@ -12,12 +12,9 @@ const LINKS = [
   { href: "/pricing", label: "Pricing" },
 ];
 
-export default async function Navbar() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+// Cookie-free on the server so pages using it can be statically cached.
+// Auth-aware links load in the browser via AuthNavLinks / MobileNav.
+export default function Navbar() {
   return (
     <header className="border-b border-ink/10 bg-paper/80 backdrop-blur sticky top-0 z-20">
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
@@ -48,28 +45,8 @@ export default async function Navbar() {
           >
             Post an RFQ
           </Link>
-          {user ? (
-            <>
-              <Link href="/dashboard" className="hidden sm:inline text-sm font-medium text-ink/70 hover:text-ink transition">
-                Dashboard
-              </Link>
-              <form action="/auth/signout" method="post">
-                <button type="submit" className="text-sm font-semibold text-paper bg-sea hover:bg-ink transition rounded-md px-3.5 py-2">
-                  Sign out
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="hidden sm:inline text-sm font-medium text-ink/70 hover:text-ink transition">
-                Sign in
-              </Link>
-              <Link href="/signup" className="text-sm font-semibold text-paper bg-sea hover:bg-ink transition rounded-md px-3.5 py-2">
-                List your company
-              </Link>
-            </>
-          )}
-          <MobileNav links={LINKS} signedIn={Boolean(user)} />
+          <AuthNavLinks />
+          <MobileNav links={LINKS} />
         </div>
       </div>
     </header>

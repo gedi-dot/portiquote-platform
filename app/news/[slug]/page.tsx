@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import JsonLd from "@/components/JsonLd";
 import { formatDate } from "@/lib/format";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
+
+export const revalidate = 86400; // speed pass: cached, refreshed every 86400s
 
 export async function generateMetadata({
   params,
@@ -14,7 +16,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: post } = await supabase
     .from("posts")
     .select("title, excerpt, body, published_at")
@@ -42,7 +44,7 @@ export default async function NewsPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: post } = await supabase
     .from("posts")
     .select("title, excerpt, body, type, published_at, created_at")
