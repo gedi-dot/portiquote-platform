@@ -1,5 +1,8 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import JsonLd from "@/components/JsonLd";
+import FaqBlock, { type Faq } from "@/components/FaqBlock";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata = {
   title: "FCL vs LCL — Which Should You Ship? | N.K. Gedi & Co.",
@@ -15,6 +18,13 @@ const COMPARE = [
   ["Handling", "Sealed at origin, opened by you", "Loaded and unloaded alongside other cargo"],
   ["Damage risk", "Lower — nobody else touches it", "Higher — more handling, neighbouring cargo"],
   ["Destination charges", "Fewer, more predictable", "Deconsolidation and handling fees add up"],
+];
+
+const FAQS: Faq[] = [
+  { q: "What is the difference between FCL and LCL?", a: "FCL means you buy an entire container and fill it with your own goods, sealed at origin and opened by you. LCL means you rent space inside a container shared with other importers, billed by volume or weight, and handled alongside their cargo at both ends." },
+  { q: "At what volume does FCL become cheaper than LCL?", a: "Usually somewhere around 13 to 15 cubic metres. A 20ft container holds roughly 28 to 33 cubic metres in practice, so below the break-even sharing is sensible, and above it a container you control often beats a full LCL booking even when partly empty." },
+  { q: "Why does LCL cost more than the quoted rate?", a: "LCL freight rates exclude destination charges. Deconsolidation, handling, documentation and terminal fees are billed on arrival per shipment rather than per cubic metre, which is why a small LCL consignment can carry a bill that is large relative to its size." },
+  { q: "Is LCL slower than FCL?", a: "Yes. LCL waits for co-loading cargo to fill the container at origin and for deconsolidation on arrival, typically adding a week or more compared with a full container on the same sailing." },
 ];
 
 export default function FclVsLclPage() {
@@ -146,6 +156,29 @@ export default function FclVsLclPage() {
               </Link>
             </div>
           </div>
+
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "Article",
+              headline: "FCL vs LCL: which should you ship?",
+              description: "The volume break-even, the destination charges LCL quotes leave out, and a simple rule for deciding.",
+              publisher: { "@type": "Organization", name: "N.K. Gedi & Co." },
+              mainEntityOfPage: `${SITE_URL}/guides/fcl-vs-lcl`,
+            }}
+          />
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Guides", item: `${SITE_URL}/guides` },
+                { "@type": "ListItem", position: 2, name: "FCL vs LCL: which should you ship?", item: `${SITE_URL}/guides/fcl-vs-lcl` },
+              ],
+            }}
+          />
+
+          <FaqBlock faqs={FAQS} />
         </div>
       </main>
     </>

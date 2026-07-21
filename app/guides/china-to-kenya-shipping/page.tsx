@@ -1,5 +1,8 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import JsonLd from "@/components/JsonLd";
+import FaqBlock, { type Faq } from "@/components/FaqBlock";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata = {
   title: "Shipping from China to Kenya — Routes, Costs & Clearance Guide",
@@ -35,6 +38,14 @@ const DOCS = [
   ["Bill of lading / air waybill", "Your title to the goods. An original B/L is often needed for release."],
   ["Certificate of Conformity", "Kenya requires PVoC certification for most regulated goods — arranged before shipping, not after arrival."],
   ["Import Declaration Form", "Lodged through KRA before arrival."],
+];
+
+const FAQS: Faq[] = [
+  { q: "How long does shipping from China to Kenya take?", a: "A full container typically runs 25 to 35 days port to port. Shared LCL cargo takes roughly 30 to 45 days because it waits for consolidation at origin and deconsolidation on arrival. Air freight moves in days. Most sailings tranship through a Gulf or Asian hub rather than going direct." },
+  { q: "Which Chinese ports serve Kenya?", a: "Most Kenya-bound cargo leaves from the southern manufacturing belt, principally Shenzhen (Yantian) and Guangzhou (Nansha), or from Shanghai and Ningbo further north. Almost all of it arrives at Mombasa, then moves inland to Nairobi by SGR rail or road." },
+  { q: "Should I ship FCL or LCL from China?", a: "Around 13 to 15 cubic metres, a 20ft container usually becomes cheaper than paying LCL rates by volume. Below that, sharing a container makes sense. Above it, ask for both prices, because many importers keep paying LCL long after a full container became the better deal." },
+  { q: "What documents do I need to import from China into Kenya?", a: "A commercial invoice matching the actual contents, a packing list, the bill of lading or air waybill, a Certificate of Conformity under Kenya's PVoC programme for most regulated goods, and an Import Declaration Form lodged with KRA before arrival." },
+  { q: "What is PVoC and when do I arrange it?", a: "PVoC is Kenya's Pre-Export Verification of Conformity programme. Certification is arranged in the country of export before shipping, not after arrival. Cargo that reaches Mombasa without it faces expensive destination-inspection routes or outright rejection." },
 ];
 
 export default function ChinaToKenyaPage() {
@@ -177,6 +188,29 @@ export default function ChinaToKenyaPage() {
             carrier, transhipment and season. Confirm regulatory requirements with KEBS and
             KRA before shipping.
           </p>
+
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "Article",
+              headline: "Shipping from China to Kenya",
+              description: "Origin ports, realistic transit times, FCL versus LCL versus air, the documents customs wants, and where importers lose money.",
+              publisher: { "@type": "Organization", name: "N.K. Gedi & Co." },
+              mainEntityOfPage: `${SITE_URL}/guides/china-to-kenya-shipping`,
+            }}
+          />
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Guides", item: `${SITE_URL}/guides` },
+                { "@type": "ListItem", position: 2, name: "Shipping from China to Kenya", item: `${SITE_URL}/guides/china-to-kenya-shipping` },
+              ],
+            }}
+          />
+
+          <FaqBlock faqs={FAQS} />
         </div>
       </main>
     </>

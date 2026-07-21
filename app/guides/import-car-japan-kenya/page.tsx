@@ -1,5 +1,8 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import JsonLd from "@/components/JsonLd";
+import FaqBlock, { type Faq } from "@/components/FaqBlock";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata = {
   title: "Importing a Car from Japan to Mombasa — Costs, Duty & Process (2026)",
@@ -72,6 +75,14 @@ const STEPS = [
     title: "Register with NTSA",
     body: "After release, the vehicle is inspected, issued Kenyan plates and a logbook. Only then is it legal on the road. Moving the car up from Mombasa is by road transporter or SGR rail.",
   },
+];
+
+const FAQS: Faq[] = [
+  { q: "How old a car can I import into Kenya?", a: "Kenya bars vehicles more than eight years old, so a 2026 clearance means a 2019 vehicle or newer. The age is generally counted from first registration rather than manufacture, so a car built in 2018 but first registered in 2019 can still qualify. The vehicle must also be right-hand drive." },
+  { q: "How much duty will I pay importing a car to Kenya?", a: "Five charges apply: import duty at 25 percent, excise at 20 percent for engines up to 1,500cc or 25 percent above that, VAT at 16 percent, an Import Declaration Fee of 3.5 percent and a Railway Development Levy of 2 percent. Because several compound, the total typically lands around 75 to 90 percent of the customs value." },
+  { q: "Does KRA charge duty on the price I paid for the car?", a: "No. KRA assesses duty on the Current Retail Selling Price it publishes for that model, depreciated for age, rather than your purchase invoice. If the CRSP value is higher than what you paid, and it often is, duty is calculated on the higher figure." },
+  { q: "Is RoRo or a container better for shipping a car to Kenya?", a: "RoRo is usually cheaper and simpler for a single running vehicle, which is driven aboard a dedicated car carrier. A container is worth it when shipping two or more cars, a non-runner, or when you want spare parts and personal effects loaded alongside the vehicle." },
+  { q: "Do I need an inspection before shipping a car from Japan?", a: "Yes. Every vehicle must pass a pre-shipment roadworthiness and standards inspection in Japan under KEBS standard KS 1515:2000, carried out by a KEBS-appointed agent, typically costing 150 to 250 US dollars. Shipping without the certificate risks rejection at Mombasa at your cost." },
 ];
 
 export default function ImportCarJapanKenyaPage() {
@@ -225,6 +236,29 @@ export default function ImportCarJapanKenyaPage() {
             exemptions and classification. Confirm with KRA or a licensed clearing agent
             before committing funds.
           </p>
+
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "Article",
+              headline: "Importing a car from Japan to Mombasa",
+              description: "Kenya's 8-year rule, the full KRA duty stack on CRSP value, KEBS inspection, RoRo versus container, and clearing at Mombasa.",
+              publisher: { "@type": "Organization", name: "N.K. Gedi & Co." },
+              mainEntityOfPage: `${SITE_URL}/guides/import-car-japan-kenya`,
+            }}
+          />
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Guides", item: `${SITE_URL}/guides` },
+                { "@type": "ListItem", position: 2, name: "Importing a car from Japan to Mombasa", item: `${SITE_URL}/guides/import-car-japan-kenya` },
+              ],
+            }}
+          />
+
+          <FaqBlock faqs={FAQS} />
         </div>
       </main>
     </>
