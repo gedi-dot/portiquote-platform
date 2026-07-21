@@ -35,15 +35,43 @@ const CODES: Record<string, string> = {
   Pakistan: "PK", Philippines: "PH", Qatar: "QA", "Saudi Arabia": "SA",
   Singapore: "SG", "South Korea": "KR", "Sri Lanka": "LK", Syria: "SY",
   Taiwan: "TW", Tajikistan: "TJ", Thailand: "TH", "Timor-Leste": "TL",
-  Turkey: "TR", Turkmenistan: "TM", "U.A.E.": "AE", Uzbekistan: "UZ",
+  Turkey: "TR", Turkmenistan: "TM", "United Arab Emirates": "AE", Uzbekistan: "UZ",
   Vietnam: "VN", Yemen: "YE",
   // ---- Americas & Oceania ----
   "United States": "US", Canada: "CA", Mexico: "MX", Brazil: "BR",
   Australia: "AU", "New Zealand": "NZ",
 };
 
+// Common name variants that appear in imported data or user input. Without
+// these, countryCode() falls back to the first two letters — which is how
+// "United Arab Emirates" became "UN" (and rendered the United Nations flag).
+const ALIASES: Record<string, string> = {
+  "U.A.E.": "United Arab Emirates",
+  UAE: "United Arab Emirates",
+  "United Arab Emirates (UAE)": "United Arab Emirates",
+  "USA": "United States",
+  "U.S.A.": "United States",
+  "United States of America": "United States",
+  UK: "United Kingdom",
+  "U.K.": "United Kingdom",
+  "Great Britain": "United Kingdom",
+  "Republic of Korea": "South Korea",
+  "Korea, South": "South Korea",
+  "Ivory Coast": "Côte d'Ivoire",
+  "Cape Verde": "Cabo Verde",
+  Swaziland: "Eswatini",
+  "DR Congo": "Democratic Republic of the Congo",
+  "DRC": "Democratic Republic of the Congo",
+  Tanzania: "Tanzania",
+};
+
+export function canonicalCountry(name: string): string {
+  return ALIASES[name] ?? name;
+}
+
 export function countryCode(name: string): string {
-  return CODES[name] ?? name.slice(0, 2).toUpperCase();
+  const canonical = canonicalCountry(name);
+  return CODES[canonical] ?? canonical.slice(0, 2).toUpperCase();
 }
 
 // Unicode flag emoji from the country's ISO code (regional indicators).

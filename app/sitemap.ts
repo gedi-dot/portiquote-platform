@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createPublicClient } from "@/lib/supabase/public";
 import { SITE_URL } from "@/lib/site";
-import { countryCode, REGIONS } from "@/lib/format";
+import { countryCode, countryFromCode, REGIONS } from "@/lib/format";
 
 export const revalidate = 3600; // refresh hourly
 
@@ -59,9 +59,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     countrySet.add(l.origin_country);
     countrySet.add(l.destination_country);
   }
+  // Only emit country pages whose name resolves to a real ISO code — a bad
+  // fallback code would produce a 404 URL in the sitemap.
+  const emittedCountryCodes = new Set<string>();
   for (const name of countrySet) {
+    const code = countryCode(name);
+    if (!countryFromCode(code)) continue;
+    if (emittedCountryCodes.has(code)) continue;
+    emittedCountryCodes.add(code);
     entries.push({
-      url: u(`/countries/${countryCode(name).toLowerCase()}`),
+      url: u(`/countries/${code.toLowerCase()}`),
       changeFrequency: "weekly",
       priority: 0.8,
     });
