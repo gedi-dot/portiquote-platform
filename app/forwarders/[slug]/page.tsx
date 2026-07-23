@@ -130,14 +130,27 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
     .map((s) => s.services?.name)
     .filter((n): n is string => Boolean(n));
 
+  // Does the viewer run a Premium forwarder? Full contact details are a
+  // Premium benefit — the people who pay get to reach other companies directly.
+  let viewerIsPremium = false;
+  if (user) {
+    const { data: myCompany } = await supabase
+      .from("forwarder_companies")
+      .select("membership_tier")
+      .eq("owner_id", user.id)
+      .maybeSingle();
+    viewerIsPremium = myCompany?.membership_tier === "premium";
+  }
+
   // Website is always public (it came from public directories and helps
-  // shippers find the company). Phone/email/WhatsApp are the payoff for
-  // claiming — shown only once a forwarder has claimed and owns the listing.
+  // shippers find the company). Phone/email/WhatsApp are shown to the owner
+  // and to Premium members — a paid benefit and the payoff for claiming.
   const publicContact = [
     f.website ? { label: "Website", value: f.website } : null,
   ].filter((c): c is { label: string; value: string } => c !== null);
 
-  const privateContact = f.is_claimed
+  const maySeeContact = f.is_claimed && (isOwner || viewerIsPremium);
+  const privateContact = maySeeContact
     ? [
         f.email ? { label: "Email", value: f.email } : null,
         f.phone ? { label: "Phone", value: f.phone } : null,
@@ -256,13 +269,23 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
               {f.membership_tier === "free" && " Upgrade to receive and quote RFQ leads on your lanes."}
             </p>
             {f.membership_tier === "free" ? (
-              <Link href="/upgrade" className="text-sm font-semibold text-paper bg-sea hover:bg-ink transition rounded-md px-3.5 py-1.5">
-                Go Premium
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link href={`/forwarders/${slug}/edit`} className="text-sm font-semibold text-sea hover:underline">
+                  Edit profile
+                </Link>
+                <Link href="/upgrade" className="text-sm font-semibold text-paper bg-sea hover:bg-ink transition rounded-md px-3.5 py-1.5">
+                  Go Premium
+                </Link>
+              </div>
             ) : (
-              <Link href="/dashboard" className="text-sm font-semibold text-sea hover:underline">
-                Open dashboard →
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href={`/forwarders/${slug}/edit`} className="text-sm font-semibold text-sea hover:underline">
+                  Edit profile
+                </Link>
+                <Link href="/dashboard" className="text-sm font-semibold text-sea hover:underline">
+                  Open dashboard →
+                </Link>
+              </div>
             )}
           </div>
         </div>
@@ -361,9 +384,18 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                   </div>
                 ))}
               </div>
+              {f.is_claimed && !maySeeContact && (f.email || f.phone || f.whatsapp) && (
+                <p className="mt-3 pt-3 border-t border-ink/8 text-xs text-ink/50">
+                  Full contact details are visible to Premium members.{" "}
+                  <Link href="/upgrade" className="text-sea hover:underline">
+                    Go Premium
+                  </Link>{" "}
+                  to reach {f.company_name.split(" ")[0]} directly.
+                </p>
+              )}
               {!f.is_claimed && (f.email || f.phone || f.whatsapp) && (
                 <p className="mt-3 pt-3 border-t border-ink/8 text-xs text-ink/50">
-                  Phone and email are shown once this company claims its listing.
+                  Phone and email appear once this company claims its listing.
                 </p>
               )}
               {viewerRunsForwarder && user && f.owner_id && (

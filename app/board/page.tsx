@@ -31,7 +31,12 @@ type BoardRfq = {
   weight_kg: number | null;
   volume_cbm: number | null;
   is_hazardous: boolean;
+  imdg_class: string | null;
   ready_date: string | null;
+  target_delivery_date: string | null;
+  hs_code: string | null;
+  cargo_description: string | null;
+  shipper_id: string;
   quote_deadline: string | null;
   created_at: string;
   quotes: { count: number }[];
@@ -69,10 +74,12 @@ export default async function BoardPage() {
     .select(
       `id, reference, title, mode, origin_country, origin_city,
        destination_country, destination_city, incoterm, container_type,
-       container_count, weight_kg, volume_cbm, is_hazardous, ready_date,
-       quote_deadline, created_at, quotes ( count )`
+       container_count, weight_kg, volume_cbm, is_hazardous, imdg_class,
+       ready_date, target_delivery_date, hs_code, cargo_description,
+       shipper_id, quote_deadline, created_at, quotes ( count )`
     )
     .eq("status", "open")
+    .neq("shipper_id", user.id) // don't show a member their own RFQs — they manage those on the dashboard
     .order("created_at", { ascending: false })
     .limit(100);
 
@@ -200,6 +207,21 @@ export default async function BoardPage() {
                         {r.incoterm}
                       </span>
                     )}
+                  </div>
+
+                  {/* Cargo description + specifics */}
+                  {r.cargo_description && (
+                    <p className="mt-3 text-[13px] text-ink/70 leading-relaxed line-clamp-3">
+                      {r.cargo_description}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-ink/50">
+                    {r.hs_code && <span>HS {r.hs_code}</span>}
+                    {r.weight_kg != null && <span>{r.weight_kg} kg</span>}
+                    {r.volume_cbm != null && <span>{r.volume_cbm} cbm</span>}
+                    {r.ready_date && <span>Ready {formatDate(r.ready_date)}</span>}
+                    {r.target_delivery_date && <span>Deliver by {formatDate(r.target_delivery_date)}</span>}
+                    {r.is_hazardous && r.imdg_class && <span className="text-coral">IMDG {r.imdg_class}</span>}
                   </div>
 
                   {/* Footer */}

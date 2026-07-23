@@ -161,9 +161,13 @@ export default async function MessagesPage() {
                   {inner}
                 </Link>
               ) : (
-                <div key={c.key} className="bg-paper border border-ink/10 rounded-xl px-4 py-3">
+                <Link
+                  key={c.key}
+                  href={`/messages/${c.otherId}`}
+                  className="block bg-paper border border-ink/10 hover:border-tide/50 transition rounded-xl px-4 py-3"
+                >
                   {inner}
-                </div>
+                </Link>
               );
             })}
           </div>
