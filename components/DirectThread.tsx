@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,10 +20,12 @@ export default function DirectThread({
   meId,
   otherUserId,
   otherName,
+  canMessage,
 }: {
   meId: string;
   otherUserId: string;
   otherName: string;
+  canMessage: boolean;
 }) {
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
   const [draft, setDraft] = useState("");
@@ -137,25 +140,40 @@ export default function DirectThread({
         ))}
         <div ref={endRef} />
       </div>
-      <div className="border-t border-ink/10 p-3">
-        <div className="flex gap-2">
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder={`Message ${otherName}…`}
-            className="flex-1 rounded-lg border border-ink/15 bg-white px-3 py-2.5 text-sm outline-none focus:border-tide"
-          />
-          <button
-            onClick={send}
-            disabled={sending || !draft.trim()}
-            className="bg-sea hover:bg-ink transition text-paper text-sm font-semibold rounded-lg px-5 disabled:opacity-50"
-          >
-            Send
-          </button>
+      {canMessage ? (
+        <div className="border-t border-ink/10 p-3">
+          <div className="flex gap-2">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder={`Message ${otherName}…`}
+              className="flex-1 rounded-lg border border-ink/15 bg-white px-3 py-2.5 text-sm outline-none focus:border-tide"
+            />
+            <button
+              onClick={send}
+              disabled={sending || !draft.trim()}
+              className="bg-sea hover:bg-ink transition text-paper text-sm font-semibold rounded-lg px-5 disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+          {error && <p className="mt-1.5 text-xs text-coral">{error}</p>}
         </div>
-        {error && <p className="mt-1.5 text-xs text-coral">{error}</p>}
-      </div>
+      ) : (
+        <div className="border-t border-ink/10 p-4 text-center bg-parchment">
+          <p className="text-sm text-ink/70">
+            Messaging is a Premium feature. Upgrade to reply to {otherName} and
+            message any forwarder on the platform.
+          </p>
+          <Link
+            href="/upgrade"
+            className="inline-block mt-2.5 bg-saffron hover:brightness-95 transition text-ink font-semibold text-sm rounded-lg px-5 py-2"
+          >
+            Go Premium to reply
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

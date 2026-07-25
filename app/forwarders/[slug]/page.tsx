@@ -116,14 +116,16 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
   // Forwarder-to-forwarder messaging: show a DM button only when the viewer
   // runs their OWN (different) forwarder and this listing is claimed (has an
   // owner to receive the message). Keeps messaging professional and spam-free.
-  let viewerRunsForwarder = false;
+  // Messaging is a Premium-forwarder feature. Only a Premium member can start
+  // (or reply to) a conversation, in both directions.
+  let viewerCanMessage = false;
   if (user && !isOwner && f.owner_id) {
     const { data: myFwd } = await supabase
       .from("forwarder_companies")
-      .select("id")
+      .select("membership_tier")
       .eq("owner_id", user.id)
       .maybeSingle();
-    viewerRunsForwarder = Boolean(myFwd);
+    viewerCanMessage = myFwd?.membership_tier === "premium";
   }
 
   const services = f.forwarder_services
@@ -398,7 +400,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                   Phone and email appear once this company claims its listing.
                 </p>
               )}
-              {viewerRunsForwarder && user && f.owner_id && (
+              {viewerCanMessage && user && f.owner_id && (
                 <ForwarderMessage
                   meId={user.id}
                   otherUserId={f.owner_id}

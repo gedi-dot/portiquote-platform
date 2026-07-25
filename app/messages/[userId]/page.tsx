@@ -22,6 +22,16 @@ export default async function DirectMessagePage({
   if (!user) redirect(`/login?next=/messages/${userId}`);
   if (userId === user.id) notFound();
 
+  // Messaging is a Premium-forwarder feature in both directions: only a Premium
+  // member can start or reply. Free members see the thread read-only with an
+  // upgrade prompt — a received message becomes a reason to go Premium.
+  const { data: myCompany } = await supabase
+    .from("forwarder_companies")
+    .select("membership_tier")
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  const canMessage = myCompany?.membership_tier === "premium";
+
   // Resolve the other person's display name: their company, else profile name.
   const [{ data: company }, { data: person }] = await Promise.all([
     supabase
@@ -54,7 +64,12 @@ export default async function DirectMessagePage({
               </Link>
             )}
           </div>
-          <DirectThread meId={user.id} otherUserId={userId} otherName={otherName} />
+          <DirectThread
+            meId={user.id}
+            otherUserId={userId}
+            otherName={otherName}
+            canMessage={canMessage}
+          />
         </div>
       </main>
     </>
