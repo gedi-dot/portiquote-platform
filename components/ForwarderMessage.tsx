@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,10 +20,12 @@ export default function ForwarderMessage({
   meId,
   otherUserId,
   otherName,
+  canSend,
 }: {
   meId: string;
   otherUserId: string;
   otherName: string;
+  canSend: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
@@ -133,7 +136,7 @@ export default function ForwarderMessage({
         {msgs === null && <p className="text-xs text-ink/45">Loading…</p>}
         {msgs !== null && msgs.length === 0 && (
           <p className="text-xs text-ink/45">
-            No messages yet — introduce your company and the lanes you cover.
+            No messages yet.
           </p>
         )}
         {(msgs ?? []).map((m) => (
@@ -148,23 +151,39 @@ export default function ForwarderMessage({
           </div>
         ))}
       </div>
-      <div className="flex gap-2 mt-2.5">
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Write a message…"
-          className="flex-1 rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-tide"
-        />
-        <button
-          onClick={send}
-          disabled={sending || !draft.trim()}
-          className="bg-sea hover:bg-ink transition text-paper text-sm font-semibold rounded-lg px-4 disabled:opacity-50"
-        >
-          Send
-        </button>
-      </div>
-      {error && <p className="mt-1.5 text-xs text-coral">{error}</p>}
+      {canSend ? (
+        <>
+          <div className="flex gap-2 mt-2.5">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Write a message…"
+              className="flex-1 rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-tide"
+            />
+            <button
+              onClick={send}
+              disabled={sending || !draft.trim()}
+              className="bg-sea hover:bg-ink transition text-paper text-sm font-semibold rounded-lg px-4 disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+          {error && <p className="mt-1.5 text-xs text-coral">{error}</p>}
+        </>
+      ) : (
+        <div className="mt-2.5 rounded-lg bg-parchment border border-ink/10 px-3.5 py-3 text-center">
+          <p className="text-xs text-ink/70">
+            Messaging forwarders directly is a Premium feature.
+          </p>
+          <Link
+            href="/upgrade"
+            className="inline-block mt-2 bg-saffron hover:brightness-95 transition text-ink font-semibold text-xs rounded-lg px-4 py-1.5"
+          >
+            Go Premium to message {otherName.split(" ")[0]}
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

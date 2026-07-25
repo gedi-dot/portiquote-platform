@@ -116,16 +116,19 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
   // Forwarder-to-forwarder messaging: show a DM button only when the viewer
   // runs their OWN (different) forwarder and this listing is claimed (has an
   // owner to receive the message). Keeps messaging professional and spam-free.
-  // Messaging is a Premium-forwarder feature. Only a Premium member can start
-  // (or reply to) a conversation, in both directions.
-  let viewerCanMessage = false;
+  // The Message button shows to any signed-in visitor (it doubles as an upgrade
+  // hook). Actually SENDING is Premium-only — enforced in the composer and in
+  // the database (migration 008). viewerCanSend drives which the composer shows.
+  let viewerCanMessage = false; // may we render the button at all?
+  let viewerCanSend = false;    // may this viewer actually send?
   if (user && !isOwner && f.owner_id) {
+    viewerCanMessage = true;
     const { data: myFwd } = await supabase
       .from("forwarder_companies")
       .select("membership_tier")
       .eq("owner_id", user.id)
       .maybeSingle();
-    viewerCanMessage = myFwd?.membership_tier === "premium";
+    viewerCanSend = myFwd?.membership_tier === "premium";
   }
 
   const services = f.forwarder_services
@@ -405,6 +408,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                   meId={user.id}
                   otherUserId={f.owner_id}
                   otherName={f.company_name}
+                  canSend={viewerCanSend}
                 />
               )}
             </div>
