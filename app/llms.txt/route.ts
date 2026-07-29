@@ -6,7 +6,7 @@ export const dynamic = "force-static";
 // answer engines, following the emerging llmstxt.org convention. Keeps our
 // most citable pages and their subject matter explicit.
 export function GET() {
-  const body = `# N.K. Gedi & Co.
+  const body = `# FreightPair
 
 > A freight forwarder marketplace for Africa. Cargo owners post a shipment once
 > and receive competing quotes from vetted forwarders. Covers ocean (FCL and

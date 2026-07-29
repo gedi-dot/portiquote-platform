@@ -1,7 +1,6 @@
-// Central site identity. When the final company name is chosen, update
-// NEXT_PUBLIC_SITE_NAME (and UI strings) — all SEO metadata follows from here.
+// Central site identity. All SEO metadata follows from here.
 export const SITE_NAME =
-  process.env.NEXT_PUBLIC_SITE_NAME ?? "N.K. Gedi & Co.";
+  process.env.NEXT_PUBLIC_SITE_NAME ?? "FreightPair";
 
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"

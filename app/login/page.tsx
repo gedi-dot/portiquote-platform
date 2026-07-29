@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import PasswordInput from "@/components/PasswordInput";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,13 +32,9 @@ export default function LoginPage() {
     <main className="min-h-screen grid place-items-center px-5 py-16">
       <div className="w-full max-w-sm">
         <Link href="/" className="flex items-center gap-2.5 justify-center mb-8">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="15" stroke="#0B4A54" strokeWidth="1.5" />
-            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#F2A83B" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="2.5" fill="#F2A83B" />
-          </svg>
+          <Logo size={26} />
           <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
-            N.K.&nbsp;Gedi&nbsp;&amp;&nbsp;Co.
+            FreightPair
           </span>
         </Link>
 

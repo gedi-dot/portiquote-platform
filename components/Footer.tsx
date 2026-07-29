@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 const COLS = [
   {
@@ -39,13 +40,9 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-5 py-10 grid gap-8 sm:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2">
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <circle cx="16" cy="16" r="15" stroke="#0B4A54" strokeWidth="1.5" />
-              <path d="M16 3 A13 13 0 0 1 16 29" stroke="#F2A83B" strokeWidth="1.5" />
-              <circle cx="16" cy="16" r="2.5" fill="#F2A83B" />
-            </svg>
+            <Logo size={22} />
             <span className="font-display font-bold text-[13px] tracking-[0.18em] uppercase text-ink">
-              N.K. Gedi &amp; Co.
+              FreightPair
             </span>
           </div>
           <p className="text-sm text-ink/55 mt-3 max-w-[220px]">
@@ -70,7 +67,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-ink/5">
         <p className="mx-auto max-w-6xl px-5 py-4 font-mono text-[11px] text-ink/40">
-          © {new Date().getFullYear()} N.K. Gedi &amp; Co. · Freight forwarder marketplace
+          © {new Date().getFullYear()} FreightPair · Freight forwarder marketplace
         </p>
       </div>
     </footer>

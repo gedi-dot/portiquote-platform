@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MobileNav from "@/components/MobileNav";
 import AuthNavLinks from "@/components/AuthNavLinks";
+import Logo from "@/components/Logo";
 
 const LINKS = [
   { href: "/directory", label: "Directory" },
@@ -19,14 +20,9 @@ export default function Navbar() {
     <header className="border-b border-ink/10 bg-paper/80 backdrop-blur sticky top-0 z-20">
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="15" stroke="#0B4A54" strokeWidth="1.5" />
-            <path d="M16 3 A13 13 0 0 1 16 29" stroke="#F2A83B" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="2.5" fill="#F2A83B" />
-            <path d="M16 4 L16 8 M16 24 L16 28 M4 16 L8 16 M24 16 L28 16" stroke="#0B4A54" strokeWidth="1.5" />
-          </svg>
+          <Logo size={26} />
           <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
-            N.K.&nbsp;Gedi&nbsp;&amp;&nbsp;Co.
+            FreightPair
           </span>
         </Link>
 

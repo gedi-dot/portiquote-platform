@@ -5,7 +5,7 @@ import { formatDate } from "@/lib/format";
 
 export const revalidate = 86400; // speed pass: cached, refreshed every 86400s
 
-export const metadata = { title: "News & Insights — N.K. Gedi & Co." };
+export const metadata = { title: "News & Insights — FreightPair" };
 
 export default async function NewsPage() {
   const supabase = createPublicClient();

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "About — N.K. Gedi & Co." };
+export const metadata = { title: "About — FreightPair" };
 
 export default function AboutPage() {
   return (
@@ -14,15 +14,16 @@ export default function AboutPage() {
 
           <div className="mt-6 space-y-4 text-[15px] leading-relaxed text-ink/75">
             <p>
-              N.K. Gedi &amp; Co. is a freight forwarder marketplace built in Nairobi. Shippers post a
+              FreightPair is a freight forwarder marketplace built in Nairobi. Shippers post a
               consignment once; vetted forwarders across Africa compete for it with priced quotes —
               ocean, air, road, and RoRo, on lanes reaching Europe, Asia, the Gulf, and the Americas.
             </p>
             <p>
-              The name carries the coast in it. <em>Gedi</em> nods to the Gede ruins — a Swahili
-              trading city that moved goods between Africa, Arabia, India, and China from the 12th
-              century. Long before container ships, this coast ran global trade on monsoon winds.
-              We are building the modern version of that marketplace.
+              The name says what the platform does. Every shipment needs the right forwarder —
+              one who actually runs that lane, knows that port, and clears that cargo. Finding
+              them usually means ringing round for days. <em>FreightPair</em> does the pairing:
+              you describe the cargo once, and the forwarders who genuinely cover your route
+              come to you with prices.
             </p>
             <p>
               The platform was founded by a freight operations professional with years of hands-on

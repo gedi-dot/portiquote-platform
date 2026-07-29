@@ -27,7 +27,7 @@ export async function createCheckoutSession(opts: {
     "line_items[0][price_data][currency]": "usd",
     "line_items[0][price_data][unit_amount]": String(opts.amountUsdCents),
     "line_items[0][price_data][product_data][name]":
-      "N.K. Gedi & Co. — Premium membership (30 days)",
+      "FreightPair — Premium membership (30 days)",
   };
   if (opts.customerEmail) fields["customer_email"] = opts.customerEmail;
   for (const [k, v] of Object.entries(opts.metadata)) {

@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Terms of Service — N.K. Gedi & Co." };
+export const metadata = { title: "Terms of Service — FreightPair" };
 
 const H = ({ children }: { children: React.ReactNode }) => (
   <h2 className="font-display font-semibold text-lg mt-8 mb-2">{children}</h2>
@@ -24,7 +24,7 @@ export default function TermsPage() {
 
           <H>1. Who we are and what this platform is</H>
           <p>
-            N.K. Gedi &amp; Co. (&quot;the platform&quot;, &quot;we&quot;) operates a
+            FreightPair (&quot;the platform&quot;, &quot;we&quot;) operates a
             marketplace that connects shippers with freight forwarders. We are a venue:
             we host listings, requests for quotation (RFQs), quotes, reviews, and
             messages. We are not a freight forwarder, carrier, customs broker, or party

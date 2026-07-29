@@ -4,7 +4,7 @@
 const SITE =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
 const FROM =
-  process.env.EMAIL_FROM ?? "N.K. Gedi & Co. <onboarding@resend.dev>";
+  process.env.EMAIL_FROM ?? "FreightPair <onboarding@resend.dev>";
 
 export type Mail = { to: string; subject: string; html: string };
 
@@ -43,7 +43,7 @@ export function emailShell(opts: {
   return `<!doctype html><html><body style="margin:0;background:#E9F0EE;font-family:Arial,Helvetica,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:28px 16px;">
     <div style="background:#0B4A54;border-radius:14px 14px 0 0;padding:22px 26px;">
-      <span style="color:#F2A83B;font-size:11px;letter-spacing:.18em;text-transform:uppercase;">N.K. Gedi &amp; Co.</span>
+      <span style="color:#F2A83B;font-size:11px;letter-spacing:.18em;text-transform:uppercase;">FreightPair</span>
       <h1 style="color:#FBFCFB;font-size:21px;margin:8px 0 0;">${opts.heading}</h1>
     </div>
     <div style="background:#FBFCFB;border-radius:0 0 14px 14px;padding:24px 26px;color:#062A2E;font-size:14px;line-height:1.6;">

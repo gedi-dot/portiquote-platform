@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Container Specifications — N.K. Gedi & Co." };
+export const metadata = { title: "Container Specifications — FreightPair" };
 
 const BOXES = [
   { type: "20GP", name: "20' General Purpose", inside: "5.90 × 2.35 × 2.39 m", door: "2.34 × 2.28 m", payload: "~28,200 kg", cbm: "33 m³", use: "Dense cargo: tiles, rice, machinery parts, drums." },

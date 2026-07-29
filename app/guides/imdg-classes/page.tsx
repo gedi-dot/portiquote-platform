@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "IMDG Hazard Classes — N.K. Gedi & Co." };
+export const metadata = { title: "IMDG Hazard Classes — FreightPair" };
 
 const CLASSES = [
   { n: "1", name: "Explosives", ex: "Fireworks, ammunition, blasting agents" },
