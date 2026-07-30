@@ -17,7 +17,11 @@ const LINKS = [
 // Auth-aware links load in the browser via AuthNavLinks / MobileNav.
 export default function Navbar() {
   return (
-    <header className="border-b border-ink/10 bg-paper sticky top-0 z-20 shadow-[0_1px_3px_rgba(6,42,46,0.06)]">
+    // Not sticky — the header scrolls away with the page. It stays `relative`
+    // so it remains the positioned ancestor that MobileNav's dropdown anchors
+    // to; without that the menu would position against the document and end up
+    // off-screen once the page had been scrolled.
+    <header className="border-b border-ink/10 bg-paper relative z-20">
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <Logo size={26} />
