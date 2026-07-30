@@ -1,52 +1,56 @@
-// The FreightPair mark: two interlocked rings.
+// The FreightPair mark: two interlocked containers.
 //
-// One ring is the cargo owner, the other the forwarder — linked. The rings are
-// genuinely woven: the saffron ring passes over at the top crossing, the sea
-// ring over at the bottom. That weave is what stops it reading as two loose
-// circles sitting on top of each other.
+// One box is the cargo owner, the other the forwarder — genuinely linked, and
+// offset on the diagonal so the pair reads as movement rather than as a static
+// emblem.
 //
-// The weave is drawn with an explicit arc path rather than an SVG mask, so it
-// needs no unique ids, renders identically in every browser, and survives
-// being pasted into email HTML.
+// Why boxes and not rings: interlocked rings are one of the most heavily used
+// logo forms there is. Mastercard is two overlapping circles meaning exactly
+// "connection and exchange", Audi is four, the Olympics five. Rounded squares
+// say freight — a container end-on — and are far rarer, so the mark is much
+// more defensible as something only we use.
 //
-// Geometry: sea ring centred (12,13) r9.5, saffron ring centred (26,13) r9.5.
-// They cross at (19, 6.58) and (19, 19.42). The sea ring is drawn as one long
-// arc with a gap from -65.1° to -19.9°, centred on the top crossing (-42.5°),
-// which is where the saffron shows through.
+// GEOMETRY (verified by pixel inspection, not by eye)
+// Sea box     x[2,24]  y[2,24]  rx6, stroke 3
+// Saffron box x[14,36] y[10,32] rx6, stroke 3
+// The diagonal offset is what makes a real weave possible: the outlines cross
+// at (24,10) and (14,24), and both crossings land on STRAIGHT edge runs rather
+// than in the corner radii, so the overlap is clean. A purely horizontal offset
+// gives two boxes whose outlines never cross, and so cannot be woven at all.
 //
-// The gap is 45.2° — deliberately wider than it first looks necessary. Round
-// caps extend the stroke by half its width at each end, eating 3 units of the
-// 7.5-unit arc, so a narrower gap leaves the caps crowding the saffron ring and
-// the weave reads as mud. 45.2° leaves 4.5 units of clear space for a 3-unit
-// ring to pass through.
+// THE WEAVE is done by painting order plus one redrawn segment — no SVG mask
+// and no clipPath, so the mark needs no unique ids, renders identically in
+// every browser, and survives being pasted into email HTML:
+//   1. sea box        2. saffron box (now over sea at BOTH crossings)
+//   3. an 8-unit piece of the sea box's bottom edge, redrawn on top, putting
+//      sea back over saffron at (14,24) only.
+// The redrawn piece lies exactly on the existing sea line, so it is invisible
+// except where it crosses the saffron.
 export default function Logo({
   size = 26,
   className,
+  secondary = "#0B4A54",
 }: {
   size?: number;
   className?: string;
+  /** Second box colour. Defaults to sea; pass a lighter tone on dark grounds,
+   *  where sea (#0B4A54) sits too close to ink to read. */
+  secondary?: string;
 }) {
   return (
     <svg
-      width={(size * 38) / 26}
+      width={(size * 38) / 34}
       height={size}
-      viewBox="0 0 38 26"
+      viewBox="0 0 38 34"
       fill="none"
       className={className}
       role="img"
       aria-label="FreightPair"
     >
-      {/* saffron ring — full circle, shows through the gap at the top crossing */}
-      <circle cx="26" cy="13" r="9.5" stroke="#F2A83B" strokeWidth="3" />
-
-      {/* sea ring — near-full arc with a gap at the top crossing, drawn over the
-          saffron ring so it passes over at the bottom crossing */}
-      <path
-        d="M 20.934 9.769 A 9.5 9.5 0 1 1 15.997 4.382"
-        stroke="#0B4A54"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
+      <rect x="2" y="2" width="22" height="22" rx="6" stroke={secondary} strokeWidth="3" />
+      <rect x="14" y="10" width="22" height="22" rx="6" stroke="#F2A83B" strokeWidth="3" />
+      {/* puts the sea box back on top at the lower-left crossing */}
+      <path d="M 10 24 H 18" stroke={secondary} strokeWidth="3" />
     </svg>
   );
 }
