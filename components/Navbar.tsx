@@ -17,7 +17,7 @@ const LINKS = [
 // Auth-aware links load in the browser via AuthNavLinks / MobileNav.
 export default function Navbar() {
   return (
-    <header className="border-b border-ink/10 bg-paper/80 backdrop-blur sticky top-0 z-20">
+    <header className="border-b border-ink/10 bg-paper sticky top-0 z-20 shadow-[0_1px_3px_rgba(6,42,46,0.06)]">
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <Logo size={26} />
