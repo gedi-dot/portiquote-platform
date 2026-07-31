@@ -1,7 +1,7 @@
 import Link from "next/link";
 import MobileNav from "@/components/MobileNav";
 import AuthNavLinks from "@/components/AuthNavLinks";
-import Logo from "@/components/Logo";
+import Wordmark from "@/components/Wordmark";
 
 const LINKS = [
   { href: "/directory", label: "Directory" },
@@ -24,10 +24,7 @@ export default function Navbar() {
     <header className="border-b border-ink/10 bg-paper relative z-20">
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <Logo size={26} />
-          <span className="font-display font-bold text-[19px] tracking-[-0.01em] text-ink">
-            FreightPair
-          </span>
+          <Wordmark className="font-display font-bold text-[19px] tracking-[-0.01em]" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-ink/70">

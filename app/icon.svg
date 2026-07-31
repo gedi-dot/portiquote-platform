@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Tab icon: the route mark on an ink tile. Saffron on ink has far more
-       contrast than it would on the light navbar, so the mark carries at 16px.
-       Scaled to 0.85 rather than filling the tile, so the arrowhead does not
-       collide with the rounded corners. -->
+  <!-- Tab icon. The logo is a two-tone wordmark with no symbol, so the icon is
+       the letter the colour break lands on — the P of "Pair", saffron on ink.
+       Drawn as a path rather than <text> so it never depends on a font being
+       available, and with a deliberately generous counter: at 16px a tighter
+       bowl fills in and the letter reads as a blob. Verified open at 16 and 32. -->
   <rect width="32" height="32" rx="7" fill="#062A2E"/>
-  <g transform="translate(2.4,5.4) scale(0.85)" fill="none">
-    <path d="M 3 20.5 C 7 8, 16 4.5, 22 8" stroke="#F2A83B" stroke-width="3.4" stroke-linecap="round"/>
-    <path d="M 18 2.5 L 30 9 L 18 15.5 Z" fill="#F2A83B"/>
-  </g>
+  <path fill-rule="evenodd" fill="#F2A83B"
+        d="M 9 6 H 18 A 6.5 6.5 0 0 1 18 19 H 15 V 26 H 9 Z
+           M 15 10.5 H 18 A 2 2 0 0 1 18 14.5 H 15 Z"/>
 </svg>

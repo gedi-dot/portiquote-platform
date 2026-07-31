@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import PasswordInput from "@/components/PasswordInput";
-import Logo from "@/components/Logo";
+import Wordmark from "@/components/Wordmark";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -39,10 +39,7 @@ export default function SignupPage() {
     <main className="min-h-screen grid place-items-center px-5 py-16">
       <div className="w-full max-w-sm">
         <Link href="/" className="flex items-center gap-2.5 justify-center mb-8">
-          <Logo size={26} />
-          <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
-            FreightPair
-          </span>
+          <Wordmark className="font-display font-bold text-[15px] tracking-[0.18em] uppercase" />
         </Link>
 
         <div className="bg-paper border border-ink/10 rounded-xl p-6">

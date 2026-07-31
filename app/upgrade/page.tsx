@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import Logo from "@/components/Logo";
+import Wordmark from "@/components/Wordmark";
 
 type Forwarder = { id: string; company_name: string; membership_tier: string };
 type Phase = "loading" | "no_forwarder" | "already" | "idle" | "prompted" | "confirming" | "success" | "failed";
@@ -136,10 +136,7 @@ export default function UpgradePage() {
     <main className="min-h-screen grid place-items-center px-5 py-16">
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center gap-2.5 justify-center mb-8">
-          <Logo size={26} />
-          <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
-            FreightPair
-          </span>
+          <Wordmark className="font-display font-bold text-[15px] tracking-[0.18em] uppercase" />
         </Link>
 
         <div className="bg-paper border border-ink/10 rounded-2xl overflow-hidden">
