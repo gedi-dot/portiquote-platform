@@ -25,7 +25,7 @@ export default function Navbar() {
       <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
           <Logo size={26} />
-          <span className="font-display font-bold text-[15px] tracking-[0.18em] uppercase text-ink">
+          <span className="font-display font-bold text-[19px] tracking-[-0.01em] text-ink">
             FreightPair
           </span>
         </Link>

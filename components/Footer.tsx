@@ -41,7 +41,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2">
             <Logo size={22} />
-            <span className="font-display font-bold text-[13px] tracking-[0.18em] uppercase text-ink">
+            <span className="font-display font-bold text-[17px] tracking-[-0.01em] text-ink">
               FreightPair
             </span>
           </div>

@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Browser-tab icon: the interlocked-containers mark on an ink tile.
-       The second box uses tide (#16B3A6) rather than sea (#0B4A54), which sits
-       too close to ink to read at 16px. Same weave technique as the main mark:
-       painting order, plus one redrawn edge segment, no masks or ids.
-       Crossings verified at (20,13) saffron-over and (12,19) tide-over. -->
+  <!-- Tab icon: the route mark on an ink tile. Saffron on ink has far more
+       contrast than it would on the light navbar, so the mark carries at 16px.
+       Scaled to 0.85 rather than filling the tile, so the arrowhead does not
+       collide with the rounded corners. -->
   <rect width="32" height="32" rx="7" fill="#062A2E"/>
-  <rect x="6" y="5" width="14" height="14" rx="4" fill="none" stroke="#16B3A6" stroke-width="3"/>
-  <rect x="12" y="13" width="14" height="14" rx="4" fill="none" stroke="#F2A83B" stroke-width="3"/>
-  <path d="M 10 19 H 15" fill="none" stroke="#16B3A6" stroke-width="3"/>
+  <g transform="translate(2.4,5.4) scale(0.85)" fill="none">
+    <path d="M 3 20.5 C 7 8, 16 4.5, 22 8" stroke="#F2A83B" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M 18 2.5 L 30 9 L 18 15.5 Z" fill="#F2A83B"/>
+  </g>
 </svg>
