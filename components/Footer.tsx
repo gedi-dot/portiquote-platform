@@ -40,7 +40,7 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-5 py-10 grid gap-8 sm:grid-cols-[1.2fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2">
-            <Wordmark className="font-display font-bold text-[17px] tracking-[-0.01em]" />
+            <Wordmark className="font-display font-bold text-[17px] tracking-[-0.01em]" withRoute />
           </div>
           <p className="text-sm text-ink/55 mt-3 max-w-[220px]">
             Rooted in Africa. Moving cargo worldwide.
