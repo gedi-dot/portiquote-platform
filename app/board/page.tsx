@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabase/server";
 import { modeLabel, countryCode, formatDate, flagEmoji } from "@/lib/format";
@@ -13,7 +12,8 @@ export const metadata = {
   title: "Live shipment board — open RFQs",
   description:
     "Open shipment requests from shippers across Africa and worldwide. Premium members quote directly on the platform.",
-  robots: { index: false, follow: false }, // members-only working area
+  // Signed-out visitors get a public explainer with no shipment data on it,
+  // and a crawler is never signed in — so this page is safe to index.
 };
 
 type BoardRfq = {
@@ -55,8 +55,89 @@ export default async function BoardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // The board is a members-only working area.
-  if (!user) redirect("/login?next=/board");
+  // Signed-out visitors used to be dumped on a naked login form, which asked
+  // them to create an account to find out whether an account was worth having.
+  // They now get an explanation of what the board is and how to reach it.
+  if (!user) {
+    // Show the live count only once there is enough activity for it to be an
+    // argument rather than an admission. Below the threshold the page explains
+    // the board without numbers, and starts showing them on its own once real
+    // shipments are flowing — no code change needed at that point.
+    const { count } = await supabase
+      .from("rfqs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open");
+    const openCount = count ?? 0;
+    const SHOW_COUNT_FROM = 8;
+
+    return (
+      <>
+        <Navbar />
+        <section className="bg-sea text-paper">
+          <div className="mx-auto max-w-4xl px-5 py-14">
+            <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-saffron mb-2">
+              Members only
+            </p>
+            <h1 className="font-display font-bold text-3xl sm:text-4xl">
+              The live shipment board
+            </h1>
+            <p className="mt-3 max-w-2xl text-paper/75 text-[15px] leading-relaxed">
+              When a shipper posts a shipment, it lands here and in the inbox of
+              every Premium forwarder covering that route. Shipment details stay
+              behind sign-in, because cargo owners are trusting us with what they
+              are moving and when.
+              {openCount >= SHOW_COUNT_FROM
+                ? ` There are ${openCount} shipments open right now.`
+                : ""}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/signup"
+                className="bg-saffron text-ink font-semibold text-sm rounded-lg px-5 py-2.5 hover:brightness-95"
+              >
+                Create a free account
+              </Link>
+              <Link
+                href="/login?next=/board"
+                className="border border-paper/40 hover:border-paper/80 transition text-paper font-medium text-sm rounded-lg px-5 py-2.5"
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <main className="mx-auto max-w-4xl px-5 py-12">
+          <div className="grid sm:grid-cols-3 gap-7">
+            {[
+              ["Free account", "See every open shipment on the board — the route, the cargo, the dates."],
+              ["Claim your listing", "Take control of your company profile in the directory. Also free."],
+              ["Go Premium", "Quote on shipments, and get emailed the moment one matches your lanes."],
+            ].map(([title, body]) => (
+              <div key={title}>
+                <h2 className="font-display font-semibold text-lg">{title}</h2>
+                <p className="text-sm text-ink/60 mt-1.5 leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 rounded-xl border border-ink/10 bg-paper p-6">
+            <h2 className="font-display font-semibold text-lg">Have cargo to move instead?</h2>
+            <p className="text-sm text-ink/60 mt-1.5 leading-relaxed max-w-2xl">
+              Posting a shipment is free and always will be — forwarders pay for
+              membership, shippers never do.
+            </p>
+            <Link
+              href="/rfq/new"
+              className="inline-block mt-4 text-sm font-semibold text-sea hover:text-ink"
+            >
+              Post a shipment →
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   // Does this member run a forwarder, and is it Premium? (Drives the CTA copy.)
   const { data: fwd } = await supabase
