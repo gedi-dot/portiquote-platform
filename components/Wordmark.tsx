@@ -1,10 +1,10 @@
 // The FreightPair logo: the name in two colours, with a route arcing over it.
 //
-// "Freight" in deep teal-green, "Pair" in saffron — the pairing the product is
-// named for is carried by the colour break itself. The saffron arc lifts off
-// left of the F, sweeps over "Freight", and its arrowhead lands where "Pair"
-// begins. Arc and destination share a colour on purpose: the journey delivers
-// you to the pair.
+// "Freight" in ink, "Pair" in saffron — the pairing the product is named for
+// is carried by the colour break itself. The saffron arc lifts off left of the
+// F, sweeps over "Freight", and its arrowhead lands where "Pair" begins. Route
+// and destination are the same colour on purpose: the journey delivers you to
+// the pair.
 //
 // The arc is an absolutely positioned SVG sitting OVER real HTML text, rather
 // than SVG <text>. The name stays selectable, searchable and rendered in the
@@ -56,7 +56,7 @@ export default function Wordmark({
           <path d="M 359 9 L 391 25 L 359 41 Z" fill="#F2A83B" />
         </svg>
       )}
-      <span className={onDark ? "text-paper" : "text-forest"}>Freight</span>
+      <span className={onDark ? "text-paper" : "text-ink"}>Freight</span>
       <span className="text-saffron">Pair</span>
     </span>
   );

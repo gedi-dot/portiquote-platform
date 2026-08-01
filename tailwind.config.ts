@@ -6,10 +6,6 @@ const config: Config = {
     extend: {
       colors: {
         ink:       "#062A2E", // deepest ocean — primary text / darkest surface
-        forest:    "#0F766E", // deep teal-green — the "Freight" half of the logo.
-                              // 5.3:1 on paper, so it is safe at any text size.
-                              // Note tide (#16B3A6) is only 2.5:1 and must never
-                              // be used for text on a light ground.
         sea:       "#0B4A54", // brand teal — hero + dark surfaces
         tide:      "#16B3A6", // vivid turquoise — interactive / accent
         saffron:   "#F2A83B", // spice-trade gold — primary warm accent
