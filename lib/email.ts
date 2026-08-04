@@ -13,7 +13,7 @@ export async function sendEmails(mails: Mail[]): Promise<void> {
   const clean = mails.filter((m) => m.to && m.to.includes("@"));
   if (clean.length === 0) return;
   if (!key) {
-    console.log(`[email] RESEND_API_KEY not set — skipped ${clean.length} email(s):`,
+    console.error(`[email] RESEND_API_KEY not set — DROPPED ${clean.length} email(s):`,
       clean.map((m) => `${m.to} · ${m.subject}`));
     return;
   }

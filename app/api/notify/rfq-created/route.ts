@@ -62,7 +62,10 @@ export async function POST(request: Request) {
     .eq("origin_country", rfq.origin_country)
     .eq("destination_country", rfq.destination_country);
   const laneFwdIds = [...new Set((lanes ?? []).map((l) => l.forwarder_id))];
-  if (laneFwdIds.length === 0) return NextResponse.json({ ok: true, notified: 0 });
+  if (laneFwdIds.length === 0) {
+    console.log(`[rfq-created] ${rfqId}: no forwarder lists this corridor — nobody alerted`);
+    return NextResponse.json({ ok: true, notified: 0 });
+  }
 
   // …that are published and CLAIMED (an owner exists to receive the alert).
   const { data: fwds } = await admin
@@ -84,7 +87,10 @@ export async function POST(request: Request) {
   ].filter((id) => !premiumOwners.includes(id));
 
   const allOwners = [...premiumOwners, ...freeOwners];
-  if (allOwners.length === 0) return NextResponse.json({ ok: true, notified: 0 });
+  if (allOwners.length === 0) {
+    console.log(`[rfq-created] ${rfqId}: forwarders cover this lane but none are claimed — nobody alerted`);
+    return NextResponse.json({ ok: true, notified: 0 });
+  }
 
   const { data: owners } = await admin
     .from("profiles")

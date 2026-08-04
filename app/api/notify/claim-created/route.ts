@@ -16,8 +16,19 @@ export async function POST(request: Request) {
   const { claimId } = await request.json().catch(() => ({}));
   if (!claimId) return NextResponse.json({ error: "claimId required" }, { status: 400 });
 
+  // A missing setting means claim alerts are silently dead. Returning ok here
+  // is how a real claim sat unseen in the queue for eleven days: nothing in the
+  // logs, nothing in the response, no way to tell it apart from a delivered
+  // email. Fail loudly instead — the caller is fire-and-forget, so a 500 never
+  // reaches the person filing the claim, whose claim has already saved.
   const adminEmail = process.env.EMAIL_ADMIN;
-  if (!adminEmail) return NextResponse.json({ ok: true, skipped: "EMAIL_ADMIN not set" });
+  if (!adminEmail) {
+    console.error(
+      "[claim-created] EMAIL_ADMIN is not set — nobody is being told about " +
+        "new claims. Set it in the environment and redeploy."
+    );
+    return NextResponse.json({ error: "EMAIL_ADMIN not configured" }, { status: 500 });
+  }
 
   const admin = createAdminClient();
   const { data: claim } = await admin
@@ -28,10 +39,12 @@ export async function POST(request: Request) {
 
   // only the person who filed it (and recently) can trigger the alert
   if (!claim || claim.claimant_id !== user.id) {
-    return NextResponse.json({ ok: true });
+    console.warn("[claim-created] claim missing or not the caller's:", claimId);
+    return NextResponse.json({ ok: true, notified: 0 });
   }
   if (Date.now() - new Date(claim.created_at).getTime() > 10 * 60 * 1000) {
-    return NextResponse.json({ ok: true });
+    console.warn("[claim-created] claim older than 10 minutes, not alerting:", claimId);
+    return NextResponse.json({ ok: true, notified: 0 });
   }
 
   const fwd = claim.forwarder_companies as unknown as
