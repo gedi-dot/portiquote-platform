@@ -97,6 +97,27 @@ export default async function AdminPage() {
     .order("created_at", { ascending: true });
   const claims = (claimRows ?? []) as unknown as Claim[];
 
+  // Decided claims used to vanish the moment you clicked, leaving no record of
+  // what you approved or turned down and no way to spot a mistake. Keep the
+  // last dozen visible.
+  const { data: decidedRows } = await admin
+    .from("listing_claims")
+    .select(
+      `id, status, decided_at, created_at,
+       forwarder_companies(company_name, slug),
+       claimant:profiles!listing_claims_claimant_id_fkey(full_name, email)`
+    )
+    .neq("status", "pending")
+    .order("decided_at", { ascending: false })
+    .limit(12);
+  const decided = (decidedRows ?? []) as unknown as {
+    id: string;
+    status: string;
+    decided_at: string | null;
+    forwarder_companies: { company_name: string; slug: string } | null;
+    claimant: { full_name: string | null; email: string } | null;
+  }[];
+
   const queue = companies.filter((c) => c.is_published && !c.is_verified);
   const rest = companies.filter((c) => !(c.is_published && !c.is_verified));
 
@@ -204,6 +225,37 @@ export default async function AdminPage() {
               </div>
             ))}
           </div>
+
+          {decided.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink/45 mb-2">
+                Recently decided
+              </h3>
+              <div className="space-y-1">
+                {decided.map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex flex-wrap items-baseline justify-between gap-2 border border-ink/10 bg-paper/60 rounded-lg px-3.5 py-2"
+                  >
+                    <span className="text-sm">
+                      <span className="font-medium text-ink">
+                        {d.forwarder_companies?.company_name ?? "Listing removed"}
+                      </span>
+                      <span className="text-ink/50"> · {d.claimant?.email ?? "unknown"}</span>
+                    </span>
+                    <span className="font-mono text-[11px] shrink-0">
+                      <span className={d.status === "approved" ? "text-tide" : "text-ink/45"}>
+                        {d.status}
+                      </span>
+                      {d.decided_at && (
+                        <span className="text-ink/40"> · {formatDate(d.decided_at)}</span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <h2 className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink/45 mt-8 mb-2">
             Awaiting verification · {queue.length}

@@ -14,12 +14,28 @@ export default function MobileNav({
 }) {
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+    async function load(session: unknown) {
+      setSignedIn(Boolean(session));
+      if (!session) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data: me } = await supabase.auth.getUser();
+      if (!me.user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", me.user.id)
+        .maybeSingle();
+      setIsAdmin(profile?.role === "admin");
+    }
+    supabase.auth.getSession().then(({ data }) => void load(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setSignedIn(Boolean(session))
+      void load(session)
     );
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -54,6 +70,15 @@ export default function MobileNav({
                 {l.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="py-3 text-[15px] font-semibold text-saffron border-b border-ink/5"
+              >
+                Admin
+              </Link>
+            )}
             <Link
               href="/rfq/new"
               onClick={() => setOpen(false)}

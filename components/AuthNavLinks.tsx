@@ -10,12 +10,34 @@ import { createClient } from "@/lib/supabase/client";
 // default while loading — correct for the vast majority of visitors.
 export default function AuthNavLinks() {
   const [signedIn, setSignedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+
+    // Look up the role so admins get a permanent way into the queue, rather
+    // than having to dig out a notification email to find the link.
+    // One indexed row, only for signed-in users; signed-out visitors pay
+    // nothing and the navbar stays cookie-free on the server.
+    async function load(session: unknown) {
+      setSignedIn(Boolean(session));
+      if (!session) {
+        setIsAdmin(false);
+        return;
+      }
+      const { data: me } = await supabase.auth.getUser();
+      if (!me.user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", me.user.id)
+        .maybeSingle();
+      setIsAdmin(profile?.role === "admin");
+    }
+
+    supabase.auth.getSession().then(({ data }) => void load(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setSignedIn(Boolean(session))
+      void load(session)
     );
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -23,6 +45,14 @@ export default function AuthNavLinks() {
   if (signedIn) {
     return (
       <>
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="hidden sm:inline text-sm font-semibold text-saffron hover:brightness-90 transition"
+          >
+            Admin
+          </Link>
+        )}
         <Link
           href="/dashboard"
           className="hidden sm:inline text-sm font-medium text-ink/70 hover:text-ink transition"
