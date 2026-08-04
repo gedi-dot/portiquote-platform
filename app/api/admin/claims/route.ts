@@ -12,7 +12,10 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!user) {
+    console.error("[admin/claims] no session on the request");
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
 
   const { data: me } = await supabase
     .from("profiles")
@@ -20,6 +23,7 @@ export async function POST(request: Request) {
     .eq("id", user.id)
     .single();
   if (me?.role !== "admin") {
+    console.error(`[admin/claims] ${user.email} has role ${me?.role ?? "none"}, not admin`);
     return NextResponse.json({ error: "Admins only" }, { status: 403 });
   }
 
@@ -38,7 +42,14 @@ export async function POST(request: Request) {
     .eq("id", claimId)
     .single();
   if (!claim || claim.status !== "pending") {
-    return NextResponse.json({ error: "Claim not found or already decided" }, { status: 404 });
+    console.error(
+      `[admin/claims] claim ${claimId}: ` +
+        (claim ? `already ${claim.status}` : "not found (service-role read returned nothing)")
+    );
+    return NextResponse.json(
+      { error: claim ? `Already ${claim.status}` : "Claim not found" },
+      { status: 404 }
+    );
   }
 
   const { data: fwd } = await admin
@@ -50,6 +61,7 @@ export async function POST(request: Request) {
 
   if (action === "approve") {
     if (fwd.is_claimed) {
+      console.error(`[admin/claims] ${fwd.slug} is already claimed`);
       return NextResponse.json({ error: "Listing already claimed" }, { status: 409 });
     }
     await admin
@@ -60,8 +72,7 @@ export async function POST(request: Request) {
       .from("profiles")
       .update({ role: "forwarder" })
       .eq("id", claim.claimant_id)
-      .neq("role", "admin")
-      .neq("role", "admin") // approving a claim must not demote an admin;
+      .neq("role", "admin"); // approving a claim must never demote an admin
   }
 
   await admin
