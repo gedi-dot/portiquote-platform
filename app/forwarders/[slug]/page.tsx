@@ -195,22 +195,6 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
         }}
       />
 
-      {!f.is_claimed && (
-        <div className="bg-parchment border-b border-ink/10">
-          <div className="mx-auto max-w-5xl px-5 py-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-ink/70">
-              <span className="font-semibold text-ink">Unclaimed listing</span> — created from
-              public business information. Is this your company?
-            </p>
-            <Link
-              href={`/forwarders/${slug}/claim`}
-              className="bg-sea hover:brightness-110 transition text-paper text-sm font-semibold rounded-lg px-4 py-2"
-            >
-              Claim this listing — free
-            </Link>
-          </div>
-        </div>
-      )}
       {/* ---- Header ---- */}
       <section className="relative overflow-hidden bg-sea text-paper">
         <div
@@ -218,7 +202,7 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
           style={{ background: "radial-gradient(120% 120% at 12% 0%, #0B4A54 0%, #062A2E 100%)" }}
         />
         <div className="relative mx-auto max-w-5xl px-5 py-9">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display font-bold text-2xl sm:text-3xl">{f.company_name}</h1>
@@ -255,15 +239,28 @@ export default async function ForwarderProfilePage({ params }: { params: Params 
                 </span>
               </p>
             </div>
-            <Link
-              href="/rfq/new"
-              className="bg-saffron hover:brightness-95 transition text-ink font-semibold text-sm rounded-lg px-5 py-2.5"
-            >
-              Request a quote
-            </Link>
           </div>
         </div>
       </section>
+
+      {/* ---- Is this your company? Sits under the hero: the company's identity
+             comes first, then the one action aimed at its owner. ---- */}
+      {!f.is_claimed && (
+        <div className="bg-parchment border-b border-ink/10">
+          <div className="mx-auto max-w-5xl px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-ink/70">
+              <span className="font-semibold text-ink">Unclaimed listing</span> — built from
+              public business information. Is this your company?
+            </p>
+            <Link
+              href={`/forwarders/${slug}/claim`}
+              className="shrink-0 bg-sea hover:brightness-110 transition text-paper text-sm font-semibold rounded-lg px-4 py-2.5"
+            >
+              Claim this listing — free
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ---- Owner banner ---- */}
       {isOwner && (

@@ -60,7 +60,8 @@ export async function POST(request: Request) {
       .from("profiles")
       .update({ role: "forwarder" })
       .eq("id", claim.claimant_id)
-      .neq("role", "admin");
+      .neq("role", "admin")
+      .neq("role", "admin") // approving a claim must not demote an admin;
   }
 
   await admin

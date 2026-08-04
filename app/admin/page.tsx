@@ -35,7 +35,35 @@ export default async function AdminPage() {
     .select("role")
     .eq("id", user.id)
     .single();
-  if (me?.role !== "admin") redirect("/");
+  // Silently redirecting a non-admin to the homepage is what made the emailed
+  // "Open the claims queue" link look broken: you land back on the front page
+  // with no idea why. Say what happened instead.
+  if (me?.role !== "admin") {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen px-5 py-20">
+          <div className="mx-auto max-w-lg text-center">
+            <h1 className="font-display font-bold text-2xl">Admin only</h1>
+            <p className="text-ink/60 mt-2 text-[15px] leading-relaxed">
+              This is the claims and moderation queue. You are signed in as{" "}
+              <span className="font-medium text-ink">{user.email}</span>, which
+              is not an admin account. Sign in with your admin account to
+              approve claims.
+            </p>
+            <form action="/auth/signout" method="post" className="mt-6">
+              <button
+                type="submit"
+                className="bg-sea hover:bg-ink transition text-paper font-semibold text-sm rounded-lg px-5 py-2.5"
+              >
+                Sign out and switch account
+              </button>
+            </form>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   // Admin client: see every company, including unpublished drafts.
   const admin = createAdminClient();

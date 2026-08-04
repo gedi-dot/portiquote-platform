@@ -147,7 +147,14 @@ export default function NewForwarderPage() {
     }
 
     // Mark this account as a forwarder (non-blocking if it fails).
-    await supabase.from("profiles").update({ role: "forwarder" }).eq("id", userId);
+    // Upgrade shipper -> forwarder, but never overwrite an admin. Listing a
+    // company used to silently demote the platform owner and lock them out of
+    // their own admin queue.
+    await supabase
+      .from("profiles")
+      .update({ role: "forwarder" })
+      .eq("id", userId)
+      .neq("role", "admin");
 
     router.push(`/forwarders/${inserted.data.slug}`);
     router.refresh();

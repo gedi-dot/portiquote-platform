@@ -148,7 +148,7 @@ export default function ClaimListingPage({
                   Your claim is being reviewed
                 </p>
                 <p className="text-sm text-ink/60 mt-1.5">
-                  We verify every claim by hand — usually within 1–2 business
+                  We check every claim by hand and get back to you within 24
                   days. You&apos;ll get an email the moment it&apos;s approved.
                 </p>
               </div>
@@ -171,7 +171,7 @@ export default function ClaimListingPage({
                   Claim received
                 </p>
                 <p className="text-sm text-ink/60 mt-1.5">
-                  We verify every claim by hand — usually within 1–2 business
+                  We check every claim by hand and get back to you within 24
                   days. You&apos;ll get an email when it&apos;s approved.
                 </p>
               </div>

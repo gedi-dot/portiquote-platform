@@ -1,4 +1,11 @@
-// Resend email engine. Gracefully no-ops when RESEND_API_KEY is unset so the
+// Resend email engine.
+//
+// The header logo is a PNG, not the SVG the site uses: Gmail and Outlook strip
+// SVG entirely, so the header would come through blank. It is transparent so it
+// sits on the sea band, drawn at 4x for retina, and carries alt="FreightPair"
+// so the brand still reads in clients that block images by default.
+//
+// Gracefully no-ops when RESEND_API_KEY is unset so the
 // app runs fine in development without email configured.
 
 const SITE =
@@ -43,7 +50,8 @@ export function emailShell(opts: {
   return `<!doctype html><html><body style="margin:0;background:#E9F0EE;font-family:Arial,Helvetica,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:28px 16px;">
     <div style="background:#0B4A54;border-radius:14px 14px 0 0;padding:22px 26px;">
-      <span style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;"><span style="color:#FBFCFB;">Freight</span><span style="color:#F2A83B;">Pair</span></span>
+      <img src="${SITE}/email-logo.png" width="152" height="61" alt="FreightPair"
+           style="display:block;border:0;outline:none;text-decoration:none;" />
       <h1 style="color:#FBFCFB;font-size:21px;margin:8px 0 0;">${opts.heading}</h1>
     </div>
     <div style="background:#FBFCFB;border-radius:0 0 14px 14px;padding:24px 26px;color:#062A2E;font-size:14px;line-height:1.6;">
