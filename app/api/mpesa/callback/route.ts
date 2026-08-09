@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { grantPremiumDays } from "@/lib/membership";
+import { grantPremiumDays, sendPremiumConfirmation } from "@/lib/membership";
 
 export const runtime = "nodejs";
 
@@ -43,11 +43,28 @@ export async function POST(request: Request) {
       .eq("id", payment.id);
 
     // Grant Premium — extends from the current period end if still active.
-    await grantPremiumDays(admin, {
+    const { periodEnd, isRenewal } = await grantPremiumDays(admin, {
       profileId: payment.profile_id,
       forwarderId: payment.forwarder_id,
       provider: "mpesa",
     });
+
+    // Best-effort: the payment has already succeeded and Premium is already
+    // granted above, so a broken send here must never turn into an error
+    // response — Safaricom would read that as failure and retry the callback.
+    try {
+      await sendPremiumConfirmation(admin, {
+        profileId: payment.profile_id,
+        forwarderId: payment.forwarder_id,
+        amount: 2500,
+        currency: "KES",
+        receipt,
+        periodEnd,
+        isRenewal,
+      });
+    } catch (e) {
+      console.error("[mpesa/callback] confirmation email failed:", (e as Error).message);
+    }
   } else {
     await admin
       .from("payments")

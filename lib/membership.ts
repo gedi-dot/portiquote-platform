@@ -11,7 +11,7 @@ export async function grantPremiumDays(
     provider: "mpesa" | "stripe" | "paystack";
     days?: number;
   }
-): Promise<string> {
+): Promise<{ periodEnd: string; isRenewal: boolean }> {
   const days = opts.days ?? 30;
   const now = new Date();
 
@@ -62,5 +62,71 @@ export async function grantPremiumDays(
       .update({ membership_tier: "premium" })
       .eq("id", opts.forwarderId);
   }
-  return periodEnd;
+  return { periodEnd, isRenewal: Boolean(existing) };
+}
+
+// Sends the "you're Premium" confirmation after a successful payment. Kept
+// separate from grantPremiumDays so that function stays a pure DB write —
+// email is best-effort and must never make a real payment look like it
+// failed if sending goes wrong.
+//
+// Called from the three payment webhooks (M-Pesa, Stripe, Paystack) rather
+// than from client-triggered code: a webhook has no signed-in user, so this
+// is the only point in the flow that reliably fires exactly once per payment.
+export async function sendPremiumConfirmation(
+  admin: import("@supabase/supabase-js").SupabaseClient,
+  opts: {
+    profileId: string;
+    forwarderId: string | null;
+    amount: number;
+    currency: string;
+    receipt: string | null;
+    periodEnd: string;
+    isRenewal: boolean;
+  }
+) {
+  const { sendEmails, emailShell, escapeHtml } = await import("@/lib/email");
+
+  const [{ data: owner }, fwdRes] = await Promise.all([
+    admin.from("profiles").select("email, full_name").eq("id", opts.profileId).single(),
+    opts.forwarderId
+      ? admin
+          .from("forwarder_companies")
+          .select("company_name")
+          .eq("id", opts.forwarderId)
+          .single()
+      : Promise.resolve({ data: null as { company_name: string } | null }),
+  ]);
+  if (!owner?.email) return;
+
+  const companyName = fwdRes.data?.company_name ?? "your company";
+  const until = new Date(opts.periodEnd).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const amount = `${opts.currency} ${Number(opts.amount).toLocaleString()}`;
+
+  await sendEmails([
+    {
+      to: owner.email,
+      subject: opts.isRenewal
+        ? "Premium renewed — thank you"
+        : "You're Premium — leads start now",
+      html: emailShell({
+        heading: opts.isRenewal ? "Premium renewed" : "Welcome to Premium 🎉",
+        bodyHtml:
+          `<p>Payment received: <strong>${amount}</strong>` +
+          (opts.receipt ? ` (receipt ${escapeHtml(opts.receipt)})` : "") +
+          `.</p>` +
+          `<p><strong>${escapeHtml(companyName)}</strong> is Premium until <strong>${until}</strong>.</p>` +
+          (opts.isRenewal
+            ? `<p style="font-size:13px;color:#0B4A54;">No gap in cover — your new period started from the end of your last one.</p>`
+            : `<p style="font-size:13px;color:#0B4A54;">You'll now be emailed the moment a shipment matches your lanes, ` +
+              `and you can quote and message other Premium members on the platform.</p>`),
+        ctaLabel: "Open your dashboard",
+        ctaPath: "/dashboard",
+      }),
+    },
+  ]);
 }
