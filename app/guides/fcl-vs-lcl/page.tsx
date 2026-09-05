@@ -163,7 +163,7 @@ export default function FclVsLclPage() {
               "@type": "Article",
               headline: "FCL vs LCL: which should you ship?",
               description: "The volume break-even, the destination charges LCL quotes leave out, and a simple rule for deciding.",
-              publisher: { "@type": "Organization", name: "GasDi Caravan" },
+              publisher: { "@type": "Organization", name: "GassDi Caravan" },
               mainEntityOfPage: `${SITE_URL}/guides/fcl-vs-lcl`,
             }}
           />

@@ -195,7 +195,7 @@ export default function ChinaToKenyaPage() {
               "@type": "Article",
               headline: "Shipping from China to Kenya",
               description: "Origin ports, realistic transit times, FCL versus LCL versus air, the documents customs wants, and where importers lose money.",
-              publisher: { "@type": "Organization", name: "GasDi Caravan" },
+              publisher: { "@type": "Organization", name: "GassDi Caravan" },
               mainEntityOfPage: `${SITE_URL}/guides/china-to-kenya-shipping`,
             }}
           />

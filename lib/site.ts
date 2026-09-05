@@ -1,6 +1,6 @@
 // Central site identity. All SEO metadata follows from here.
 export const SITE_NAME =
-  process.env.NEXT_PUBLIC_SITE_NAME ?? "GasDi Caravan";
+  process.env.NEXT_PUBLIC_SITE_NAME ?? "GassDi Caravan";
 
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"

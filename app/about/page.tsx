@@ -14,7 +14,7 @@ export default function AboutPage() {
 
           <div className="mt-6 space-y-4 text-[15px] leading-relaxed text-ink/75">
             <p>
-              GasDi Caravan is a freight forwarder marketplace built in Nairobi. Shippers post a
+              GassDi Caravan is a freight forwarder marketplace built in Nairobi. Shippers post a
               consignment once; vetted forwarders across Africa compete for it with priced quotes —
               ocean, air, road, and RoRo, on lanes reaching Europe, Asia, the Gulf, and the Americas.
             </p>

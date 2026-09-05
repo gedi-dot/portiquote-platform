@@ -243,7 +243,7 @@ export default function ImportCarJapanKenyaPage() {
               "@type": "Article",
               headline: "Importing a car from Japan to Mombasa",
               description: "Kenya's 8-year rule, the full KRA duty stack on CRSP value, KEBS inspection, RoRo versus container, and clearing at Mombasa.",
-              publisher: { "@type": "Organization", name: "GasDi Caravan" },
+              publisher: { "@type": "Organization", name: "GassDi Caravan" },
               mainEntityOfPage: `${SITE_URL}/guides/import-car-japan-kenya`,
             }}
           />

@@ -24,7 +24,7 @@ export default function TermsPage() {
 
           <H>1. Who we are and what this platform is</H>
           <p>
-            GasDi Caravan (&quot;the platform&quot;, &quot;we&quot;) operates a
+            GassDi Caravan (&quot;the platform&quot;, &quot;we&quot;) operates a
             marketplace that connects shippers with freight forwarders. We are a venue:
             we host listings, requests for quotation (RFQs), quotes, reviews, and
             messages. We are not a freight forwarder, carrier, customs broker, or party

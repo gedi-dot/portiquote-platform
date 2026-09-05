@@ -5,7 +5,7 @@ Email clients strip webfonts, so the header logo has to be a picture. This
 draws it at 4x the display size for retina, on transparency, so it sits on the
 sea band (#0B4A54) without a seam.
 
-"GasDi" in paper, "Caravan" in saffron — on the dark band ink would vanish,
+"GassDi" in paper, "Caravan" in saffron — on the dark band ink would vanish,
 which is the same flip the Wordmark component makes with onDark.
 
 Re-run after a name change:  python3 scripts/generate-email-logo.py "New Name"
@@ -15,7 +15,7 @@ display size, or the logo will stretch.
 import os, sys, urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
-NAME = sys.argv[1] if len(sys.argv) > 1 else "GasDi Caravan"
+NAME = sys.argv[1] if len(sys.argv) > 1 else "GassDi Caravan"
 first, _, second = NAME.partition(" ")
 
 SAFF, PAPER = (242, 168, 59), (251, 252, 251)

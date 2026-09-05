@@ -1,8 +1,8 @@
-// The GasDi Caravan logo: the name in two colours, with a route arcing over it.
+// The GassDi Caravan logo: the name in two colours, with a route arcing over it.
 //
-// "GasDi" in ink, "Caravan" in saffron — the journey the product is named for
+// "GassDi" in ink, "Caravan" in saffron — the journey the product is named for
 // is carried by the colour break itself. The saffron arc lifts off left of the
-// G, sweeps over "GasDi", and its arrowhead lands where "Caravan" begins.
+// G, sweeps over "GassDi", and its arrowhead lands where "Caravan" begins.
 // Route and destination are the same colour on purpose: the journey delivers
 // you to the caravan.
 //
@@ -11,15 +11,23 @@
 // site's own font at whatever weight the browser has actually loaded.
 //
 // Every offset below is in em, so the whole lockup scales from one font-size.
-// NOTE: these were re-derived for "GasDi" (shorter than the old "Freight"),
-// so the arc now spans from 0.31em left of the G to about 3.3em right of it.
-// They are an estimate — check the arrowhead lands on the C of "Caravan" on a
-// real screen, and nudge `width` up or down by 0.1em until it does.
+// They are measured, not guessed: "GassDi" advances 3.08em in Bricolage at
+// weight 700, so "Caravan" begins around 3.33em and the arrowhead — which sits
+// at 99.2% of the SVG width — is placed just before it.
+//
+// Two traps if you ever re-derive these. The viewBox is 394x124, so width and
+// height must keep that 3.177 ratio or the arc skews. And the bottom edge has
+// to stay at 0.89em below the top of the line box, where the arc's tail meets
+// the baseline; scaling both dimensions proportionally floats the tail up into
+// the x-height. Set height from the ratio, then set top to 0.89 minus height.
+//
+// leading-none is required — it fixes the line box at 1em so the baseline sits
+// predictably and the arc cannot drift.
 const ROUTE = {
   left: "-0.31em",
-  top: "-0.25em",
-  width: "3.62em",
-  height: "1.14em",
+  top: "-0.41em",
+  width: "4.14em",
+  height: "1.30em",
 };
 
 export default function Wordmark({
@@ -28,7 +36,7 @@ export default function Wordmark({
   withRoute = false,
 }: {
   className?: string;
-  /** On dark grounds "GasDi" flips to paper; ink would be invisible. */
+  /** On dark grounds "GassDi" flips to paper; ink would be invisible. */
   onDark?: boolean;
   /**
    * Draw the route arc. Off by default because the offsets above are tuned to
@@ -56,7 +64,7 @@ export default function Wordmark({
           <path d="M 359 9 L 391 25 L 359 41 Z" fill="#F2A83B" />
         </svg>
       )}
-      <span className={onDark ? "text-paper" : "text-ink"}>GasDi</span>
+      <span className={onDark ? "text-paper" : "text-ink"}>GassDi</span>
       <span className="text-saffron">&nbsp;Caravan</span>
     </span>
   );

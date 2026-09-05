@@ -2,7 +2,7 @@
 //
 // The header logo is a PNG, not the SVG the site uses: Gmail and Outlook strip
 // SVG entirely, so the header would come through blank. It is transparent so it
-// sits on the sea band, drawn at 4x for retina, and carries alt="GasDi Caravan"
+// sits on the sea band, drawn at 4x for retina, and carries alt="GassDi Caravan"
 // so the brand still reads in clients that block images by default.
 //
 // Gracefully no-ops when RESEND_API_KEY is unset so the
@@ -11,7 +11,7 @@
 const SITE =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
 const FROM =
-  process.env.EMAIL_FROM ?? "GasDi Caravan <onboarding@resend.dev>";
+  process.env.EMAIL_FROM ?? "GassDi Caravan <onboarding@resend.dev>";
 
 export type Mail = { to: string; subject: string; html: string };
 
@@ -50,7 +50,7 @@ export function emailShell(opts: {
   return `<!doctype html><html><body style="margin:0;background:#E9F0EE;font-family:Arial,Helvetica,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:28px 16px;">
     <div style="background:#0B4A54;border-radius:14px 14px 0 0;padding:22px 26px;">
-      <img src="${SITE}/email-logo.png" width="159" height="22" alt="GasDi Caravan"
+      <img src="${SITE}/email-logo.png" width="172" height="22" alt="GassDi Caravan"
            style="display:block;border:0;outline:none;text-decoration:none;" />
       <h1 style="color:#FBFCFB;font-size:21px;margin:8px 0 0;">${opts.heading}</h1>
     </div>
