@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "About — GasDi Caravan" };
+export const metadata = { title: "About" };
 
 export default function AboutPage() {
   return (

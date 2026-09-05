@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Privacy Policy — GasDi Caravan" };
+export const metadata = { title: "Privacy Policy" };
 
 const H = ({ children }: { children: React.ReactNode }) => (
   <h2 className="font-display font-semibold text-lg mt-8 mb-2">{children}</h2>

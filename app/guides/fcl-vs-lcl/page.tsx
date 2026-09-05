@@ -5,7 +5,7 @@ import FaqBlock, { type Faq } from "@/components/FaqBlock";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata = {
-  title: "FCL vs LCL — Which Should You Ship? | GasDi Caravan",
+  title: "FCL vs LCL — Which Should You Ship?",
   description:
     "Full container or shared? The volume break-even, the hidden costs of LCL, transit-time differences, and a simple rule for deciding — with worked reasoning for African import lanes.",
   alternates: { canonical: "/guides/fcl-vs-lcl" },
