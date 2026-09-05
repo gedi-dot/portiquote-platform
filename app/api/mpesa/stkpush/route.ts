@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       currency: "KES",
       status: "pending",
       phone: normalizePhone(phone),
-      account_reference: "FREIGHTPAIR",
+      account_reference: "GASDI",
     })
     .select("id")
     .single();
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const stk = await initiateSTKPush({
       phone,
       amount: PREMIUM_PRICE_KES,
-      accountReference: "FREIGHTPAIR",
+      accountReference: "GASDI",
       description: "Premium",
     });
     await admin

@@ -265,7 +265,7 @@ export default async function DirectoryPage({
       <footer className="border-t border-ink/10 bg-paper">
         <div className="mx-auto max-w-6xl px-5 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="font-mono text-[11px] tracking-wide text-ink/45">
-            FREIGHTPAIR — freight forwarder marketplace
+            GASDI CARAVAN — freight forwarder marketplace
           </p>
           <p className="font-mono text-[11px] tracking-wide text-ink/45">
             Nairobi · Indian Ocean coast · worldwide

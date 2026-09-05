@@ -64,7 +64,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-ink/5">
         <p className="mx-auto max-w-6xl px-5 py-4 font-mono text-[11px] text-ink/40">
-          © {new Date().getFullYear()} FreightPair · Freight forwarder marketplace
+          © {new Date().getFullYear()} GasDi Caravan · Freight forwarder marketplace
         </p>
       </div>
     </footer>

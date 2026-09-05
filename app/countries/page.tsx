@@ -5,7 +5,7 @@ import { REGIONS, countryCode, flagEmoji } from "@/lib/format";
 
 export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
 
-export const metadata = { title: "Forwarders by Country — FreightPair" };
+export const metadata = { title: "Forwarders by Country — GasDi Caravan" };
 
 export default async function CountriesPage() {
   const supabase = createPublicClient();

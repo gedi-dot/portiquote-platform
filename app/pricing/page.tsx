@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Pricing — FreightPair" };
+export const metadata = { title: "Pricing — GasDi Caravan" };
 
 const FREE = [
   "Company listing in the directory",

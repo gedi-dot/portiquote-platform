@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Terms of Service — FreightPair" };
+export const metadata = { title: "Terms of Service — GasDi Caravan" };
 
 const H = ({ children }: { children: React.ReactNode }) => (
   <h2 className="font-display font-semibold text-lg mt-8 mb-2">{children}</h2>
@@ -24,7 +24,7 @@ export default function TermsPage() {
 
           <H>1. Who we are and what this platform is</H>
           <p>
-            FreightPair (&quot;the platform&quot;, &quot;we&quot;) operates a
+            GasDi Caravan (&quot;the platform&quot;, &quot;we&quot;) operates a
             marketplace that connects shippers with freight forwarders. We are a venue:
             we host listings, requests for quotation (RFQs), quotes, reviews, and
             messages. We are not a freight forwarder, carrier, customs broker, or party

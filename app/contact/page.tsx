@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import ContactForm from "@/components/ContactForm";
 
-export const metadata = { title: "Contact — FreightPair" };
+export const metadata = { title: "Contact — GasDi Caravan" };
 
 export default function ContactPage() {
   return (

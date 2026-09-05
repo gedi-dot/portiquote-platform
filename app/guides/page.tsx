@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Freight Guides — FreightPair" };
+export const metadata = { title: "Freight Guides — GasDi Caravan" };
 
 const GUIDES = [
   {

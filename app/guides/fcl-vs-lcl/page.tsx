@@ -5,7 +5,7 @@ import FaqBlock, { type Faq } from "@/components/FaqBlock";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata = {
-  title: "FCL vs LCL — Which Should You Ship? | FreightPair",
+  title: "FCL vs LCL — Which Should You Ship? | GasDi Caravan",
   description:
     "Full container or shared? The volume break-even, the hidden costs of LCL, transit-time differences, and a simple rule for deciding — with worked reasoning for African import lanes.",
   alternates: { canonical: "/guides/fcl-vs-lcl" },
@@ -163,7 +163,7 @@ export default function FclVsLclPage() {
               "@type": "Article",
               headline: "FCL vs LCL: which should you ship?",
               description: "The volume break-even, the destination charges LCL quotes leave out, and a simple rule for deciding.",
-              publisher: { "@type": "Organization", name: "FreightPair" },
+              publisher: { "@type": "Organization", name: "GasDi Caravan" },
               mainEntityOfPage: `${SITE_URL}/guides/fcl-vs-lcl`,
             }}
           />

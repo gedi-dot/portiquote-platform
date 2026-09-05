@@ -6,7 +6,7 @@ export const dynamic = "force-static";
 // answer engines, following the emerging llmstxt.org convention. Keeps our
 // most citable pages and their subject matter explicit.
 export function GET() {
-  const body = `# FreightPair
+  const body = `# GasDi Caravan
 
 > A freight forwarder marketplace for Africa. Cargo owners post a shipment once
 > and receive competing quotes from vetted forwarders. Covers ocean (FCL and

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Incoterms 2020 Explained — FreightPair" };
+export const metadata = { title: "Incoterms 2020 Explained — GasDi Caravan" };
 
 const TERMS = [
   { code: "EXW", name: "Ex Works", risk: "Seller's premises", freight: "Buyer", mode: "Any", note: "Buyer does everything, including export clearance. Heaviest burden on the buyer." },
