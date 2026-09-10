@@ -5,18 +5,22 @@ Email clients strip webfonts, so the header logo has to be a picture. This
 draws it at 4x the display size for retina, on transparency, so it sits on the
 sea band (#0B4A54) without a seam.
 
-"GassDi" in paper, "Caravan" in saffron — on the dark band ink would vanish,
+"Porti" in paper, "Quote" in saffron — on the dark band ink would vanish,
 which is the same flip the Wordmark component makes with onDark.
 
-Re-run after a name change:  python3 scripts/generate-email-logo.py "New Name"
+Re-run after a name change:  python3 scripts/generate-email-logo.py Porti Quote
 Then update the width/height on the <img> in lib/email.ts to the printed
 display size, or the logo will stretch.
 """
 import os, sys, urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
-NAME = sys.argv[1] if len(sys.argv) > 1 else "GassDi Caravan"
-first, _, second = NAME.partition(" ")
+# The split is explicit, not derived from a space: "PortiQuote" is one word
+# whose colour break falls mid-string. Passing two arguments keeps this working
+# for compound names as well as spaced ones.
+first  = sys.argv[1] if len(sys.argv) > 1 else "Porti"
+second = sys.argv[2] if len(sys.argv) > 2 else "Quote"
+NAME = first + second
 
 SAFF, PAPER = (242, 168, 59), (251, 252, 251)
 SIZE = 96          # 4x the ~24px the wordmark reads at in the header
@@ -41,7 +45,7 @@ except Exception:
 
 probe = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
 w1 = probe.textlength(first, font=font)
-w2 = probe.textlength(" " + second, font=font)
+w2 = probe.textlength(second, font=font)
 box = probe.textbbox((0, 0), NAME, font=font)
 
 W = int(w1 + w2) + PAD * 2
@@ -50,7 +54,7 @@ img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 d = ImageDraw.Draw(img)
 y = PAD - box[1]
 d.text((PAD, y), first, font=font, fill=PAPER)
-d.text((PAD + w1, y), " " + second, font=font, fill=SAFF)
+d.text((PAD + w1, y), second, font=font, fill=SAFF)
 
 out = os.path.join(here, "..", "public", "email-logo.png")
 img.save(out, "PNG", optimize=True)
