@@ -1,4 +1,4 @@
-# N.K. Gedi & Co. — Freight Forwarder Marketplace
+# PortiQuote — Freight Forwarder Marketplace
 
 Post a shipment once and let vetted African forwarders compete for it.
 All 54 African countries + lanes to Europe, Asia, the Middle East, and the
