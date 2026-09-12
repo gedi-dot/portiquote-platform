@@ -34,7 +34,8 @@ fi
 HOST_PORT="$(sed -n 's/^PORTIQUOTE_HOST_PORT=//p' .env | tr -d '"' | tail -1)"
 HOST_PORT="${HOST_PORT:-3100}"
 
-git -C "$SRC" fetch --quiet origin "$BRANCH"
+git -C "$SRC" fetch --quiet origin "$BRANCH" \
+    || die "cannot fetch from GitHub — check the deploy key (re-run setup-server.sh to diagnose)"
 git -C "$SRC" reset --quiet --hard "origin/${BRANCH}"
 REV="$(git -C "$SRC" log -1 --format='%h %s' | cut -c1-72)"
 echo "Deploying ${REV}"

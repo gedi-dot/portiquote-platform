@@ -2,15 +2,17 @@
 #
 # One-time setup of the self-hosted PortiQuote deployment. Run as root:
 #
-#     sudo mkdir -p /opt/portiquote
-#     sudo git clone https://github.com/gedi-dot/portiquote-platform /opt/portiquote/src
 #     sudo bash /opt/portiquote/src/deploy/setup-server.sh
+#
+# The repository is private, so the server reads it with a read-only deploy key.
+# DEPLOY.md has the bootstrap that creates the key and makes the first clone.
 #
 # Idempotent. It never overwrites an existing .env.
 #
 # Layout it creates, all root-owned so no tenant account can alter what the
 # root-run deploy executes:
 #
+#   /root/.ssh/portiquote_deploy    read-only deploy key for the repository
 #   /opt/portiquote/src/            git checkout of main
 #   /opt/portiquote/compose.yaml    container definition (644)
 #   /opt/portiquote/.env            secrets (600)
@@ -22,7 +24,14 @@ set -euo pipefail
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ROOT=/opt/portiquote
-REPO=https://github.com/gedi-dot/portiquote-platform
+REPO=git@github.com:gedi-dot/portiquote-platform.git
+KEY=/root/.ssh/portiquote_deploy
+# GitHub's published host key (api.github.com/meta), pinned so the first
+# connection cannot be intercepted. Fingerprint SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
+GITHUB_HOST_KEY="github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+# IdentitiesOnly stops ssh offering root's other keys, which GitHub would match
+# to a different account or repository first.
+GIT_SSH="ssh -i ${KEY} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
@@ -39,14 +48,41 @@ docker compose version > /dev/null 2>&1 || die "the docker compose plugin is not
 systemctl is-active --quiet docker || die "docker is not running"
 ok "docker $(docker version --format '{{.Server.Version}}'), compose $(docker compose version --short)"
 
+say "GitHub access"
+install -d -o root -g root -m 700 /root/.ssh
+if [ ! -f "$KEY" ]; then
+    ssh-keygen -q -t ed25519 -N "" -C "portiquote-deploy@$(hostname)" -f "$KEY"
+    ok "generated $KEY"
+fi
+grep -qxF "$GITHUB_HOST_KEY" /root/.ssh/known_hosts 2>/dev/null \
+    || echo "$GITHUB_HOST_KEY" >> /root/.ssh/known_hosts
+if ! GIT_SSH_COMMAND="$GIT_SSH" git ls-remote --quiet "$REPO" HEAD > /dev/null 2>&1; then
+    cat >&2 <<EOF
+  X GitHub refused this server's deploy key.
+
+    A repository admin must add it: github.com/gedi-dot/portiquote-platform
+    -> Settings -> Deploy keys -> Add deploy key, title "srv1", leave
+    "Allow write access" UNTICKED, and paste:
+
+    $(cat "${KEY}.pub")
+
+    Then re-run this script.
+EOF
+    exit 1
+fi
+ok "deploy key can read the repository"
+
 say "Files"
 install -d -o root -g root -m 755 "$ROOT"
 if [ ! -d "${ROOT}/src/.git" ]; then
-    git clone --quiet "$REPO" "${ROOT}/src"
+    GIT_SSH_COMMAND="$GIT_SSH" git clone --quiet "$REPO" "${ROOT}/src"
     ok "cloned $REPO"
 else
     ok "checkout already present"
 fi
+# Stored in the checkout so portiquote-deploy's plain git fetch uses the key.
+git -C "${ROOT}/src" remote set-url origin "$REPO"
+git -C "${ROOT}/src" config core.sshCommand "$GIT_SSH"
 install -o root -g root -m 644 "${HERE}/compose.yaml" "${ROOT}/compose.yaml"
 install -o root -g root -m 755 "${HERE}/portiquote-deploy" /usr/local/sbin/portiquote-deploy
 install -o root -g root -m 755 "${HERE}/portiquote-cron"   /usr/local/sbin/portiquote-cron

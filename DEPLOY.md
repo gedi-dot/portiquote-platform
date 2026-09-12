@@ -22,11 +22,31 @@ already run.
 
 ## First-time setup
 
-On the server, as an account with sudo:
+On the server, as an account with sudo.
+
+### 1. Deploy key
+
+The repository is private, so the server reads it with its own key. Create it:
 
 ```bash
+sudo install -d -m 700 /root/.ssh
+sudo ssh-keygen -t ed25519 -N "" -C "portiquote-deploy@srv1" -f /root/.ssh/portiquote_deploy
+sudo cat /root/.ssh/portiquote_deploy.pub
+```
+
+A repository admin adds that line under GitHub → Settings → **Deploy keys** →
+*Add deploy key*, with **Allow write access unticked**. The key can then read
+this one repository and nothing else, and removing it there cuts the server off.
+
+### 2. Clone and set up
+
+```bash
+# GitHub's published host key, so the first connection is verified, not trusted blindly
+echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" \
+    | sudo tee -a /root/.ssh/known_hosts
 sudo mkdir -p /opt/portiquote
-sudo git clone https://github.com/gedi-dot/portiquote-platform /opt/portiquote/src
+sudo env GIT_SSH_COMMAND="ssh -i /root/.ssh/portiquote_deploy -o IdentitiesOnly=yes" \
+    git clone git@github.com:gedi-dot/portiquote-platform.git /opt/portiquote/src
 sudo bash /opt/portiquote/src/deploy/setup-server.sh
 sudo nano /opt/portiquote/.env      # copy the values from Vercel's env settings
 sudo portiquote-deploy
