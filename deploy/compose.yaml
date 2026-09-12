@@ -1,0 +1,35 @@
+# Installed to /opt/portiquote/compose.yaml by setup-server.sh, owned by root.
+#
+# It deliberately lives OUTSIDE the git checkout. The deploy runs as root, so a
+# compose file taken from the repository would let anyone with push access
+# mount the host filesystem into the container. The Dockerfile does come from
+# the repository, but a build step cannot reach the host.
+
+name: portiquote
+
+services:
+  web:
+    build:
+      context: ./src
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?missing in .env}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?missing in .env}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?missing in .env}
+        NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-PortiQuote}
+    image: portiquote-web:latest
+    env_file: .env
+    environment:
+      # Overrides anything in .env: the container always listens on 3000 and
+      # the host side is chosen by PORTIQUOTE_HOST_PORT below.
+      PORT: "3000"
+    # Loopback only. The public side is DirectAdmin's nginx, which owns the
+    # domain and its Let's Encrypt certificate and proxies to this port.
+    ports:
+      - "127.0.0.1:${PORTIQUOTE_HOST_PORT:-3100}:3000"
+    restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 768m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
