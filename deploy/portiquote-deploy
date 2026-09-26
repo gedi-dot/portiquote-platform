@@ -135,6 +135,30 @@ if [ "$(psql_q -c "SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin';" 2>/
     die "database is missing Supabase's roles"
 fi
 
+# GoTrue runs its own migrations on every start, and they CREATE OR REPLACE the
+# auth helper functions (auth.uid, auth.role, auth.email). That needs ownership,
+# and on a fresh cluster the image leaves them owned by `postgres`, so GoTrue
+# fatals with `must be owner of function uid` and restarts forever while the
+# database itself looks perfectly healthy.
+#
+# Handing them over is the intended path rather than a workaround: the image's own
+# migrations grant supabase_auth_admin to postgres, which is what makes this
+# reassignment permitted. Idempotent, and it repairs a running cluster without
+# reinitialising it.
+psql_q -v ON_ERROR_STOP=1 <<'SQL' > /dev/null || die "could not give GoTrue ownership of the auth helper functions"
+do $$
+declare r record;
+begin
+  for r in select p.oid::regprocedure as sig
+             from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'auth'
+              and pg_get_userbyid(p.proowner) <> 'supabase_auth_admin'
+  loop
+    execute format('alter function %s owner to supabase_auth_admin', r.sig);
+  end loop;
+end $$;
+SQL
+
 psql_q -v ON_ERROR_STOP=1 -c "
     CREATE TABLE IF NOT EXISTS public.schema_migrations (
         filename   text        PRIMARY KEY,
@@ -161,7 +185,9 @@ done
 [ "$APPLIED" -eq 0 ] && echo "  schema already up to date"
 
 # --------------------------------------------------------------------- start --
-docker compose up -d
+# Reported rather than left to `set -e`, which exits with Compose's raw error and
+# no line in the deploy log saying what was being attempted.
+docker compose up -d || die "containers failed to start (see 'docker compose logs')"
 
 # --------------------------------------------------------------- healthcheck --
 # Three checks, each proving something the one before it does not:
