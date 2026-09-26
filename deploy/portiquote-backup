@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#
+# Nightly database dump for one environment.
+#
+#     sudo portiquote-backup production
+#
+# Self-hosting means nobody else is taking these. A dump here is the only thing
+# standing between a bad migration and starting the marketplace over.
+#
+# Custom format (-Fc), which is compressed and restores selectively:
+#
+#     docker compose exec -T db pg_restore -U postgres -d postgres --clean \
+#         < /opt/portiquote/production/backups/portiquote-2026-09-26.dump
+#
+# These files contain every account, listing and payment in the database. They
+# are mode 600 and root-owned for that reason.
+
+set -euo pipefail
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+KEEP_DAYS=14
+
+ENV_NAME="${1:-production}"
+case "$ENV_NAME" in
+    production|staging) ;;
+    *) echo "usage: portiquote-backup {production|staging}" >&2; exit 2 ;;
+esac
+
+ROOT="/opt/portiquote/${ENV_NAME}"
+OUT="${ROOT}/backups"
+[ -d "$ROOT" ] || { echo "portiquote-backup: no ${ROOT}" >&2; exit 1; }
+cd "$ROOT"
+
+install -d -o root -g root -m 700 "$OUT"
+FILE="${OUT}/portiquote-$(date +%F-%H%M).dump"
+
+# Written to a temporary name first: a half-finished dump that later looks like a
+# complete one is worse than no dump, because it is only discovered on restore.
+TMP="${FILE}.partial"
+if ! docker compose exec -T db pg_dump -U postgres -d postgres -Fc > "$TMP"; then
+    rm -f "$TMP"
+    echo "portiquote-backup: pg_dump failed for ${ENV_NAME}" >&2
+    exit 1
+fi
+
+# A custom-format dump of this schema is tens of KB at minimum. Anything tiny
+# means pg_dump wrote an error to stdout or the database was empty.
+SIZE="$(stat -c %s "$TMP")"
+if [ "$SIZE" -lt 4096 ]; then
+    rm -f "$TMP"
+    echo "portiquote-backup: dump was only ${SIZE} bytes — refusing to keep it" >&2
+    exit 1
+fi
+
+mv "$TMP" "$FILE"
+chmod 600 "$FILE"
+echo "$(date '+%F %T')  ${FILE}  ${SIZE} bytes"
+
+# Prune old dumps. -mtime +N is strictly older than N days, so KEEP_DAYS=14 keeps
+# a fortnight.
+find "$OUT" -maxdepth 1 -name 'portiquote-*.dump' -mtime "+${KEEP_DAYS}" -delete
+find "$OUT" -maxdepth 1 -name '*.partial' -mtime +1 -delete

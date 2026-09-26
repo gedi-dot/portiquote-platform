@@ -1,0 +1,109 @@
+name: Release
+
+# Build once, promote by tag.
+#
+#   push to main  -> builds and publishes ghcr.io/…:sha-<commit> (and :main)
+#   push of v*    -> re-tags that same digest as :v<x.y.z>, without rebuilding
+#
+# Re-tagging rather than rebuilding is the point: production runs the byte
+# identical image that was tested on staging. A second build of the same source
+# can still differ — a base image moves, a transitive dependency resolves
+# differently — and then "it worked on staging" stops meaning anything.
+#
+# Nothing here deploys. The server pulls, because it holds the secrets and
+# decides when to switch, and because CI has no route into it.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    # Tags are handled by `promote`; building there would defeat the purpose.
+    if: "!startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # sha- prefixed so a tag and a commit can never collide, and :main for
+          # "whatever is newest", which is what staging follows.
+          tags: |
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+            ${{ env.IMAGE }}:main
+          # The build needs no database and no secrets: everything
+          # environment-specific is read at runtime. Only the canonical site URL
+          # is baked in, and it is the same in every environment by design —
+          # see lib/site.ts.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: Report the tag to deploy
+        run: |
+          echo "### Built \`sha-${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Deploy to staging on srv1:' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo 'sudo portiquote-deploy staging sha-${{ github.sha }}' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+  promote:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-tag the commit's image as ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          SRC="${IMAGE}:sha-${GITHUB_SHA}"
+          DST="${IMAGE}:${GITHUB_REF_NAME}"
+
+          # The tagged commit must already have been built by the main branch
+          # run. If it has not, the tag was pushed to a commit that never landed
+          # on main — refuse rather than quietly build something untested.
+          if ! docker buildx imagetools inspect "$SRC" > /dev/null 2>&1; then
+            echo "::error::No image for ${SRC}. Tag a commit that has been built on main."
+            exit 1
+          fi
+
+          # Copies the manifest, so DST ends up with the same digest as SRC.
+          docker buildx imagetools create --tag "$DST" "$SRC"
+          docker buildx imagetools inspect "$DST" | head -5
+
+      - name: Report the tag to deploy
+        run: |
+          echo "### ${{ github.ref_name }} is ready" >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Same digest as the image staging has been running. On srv1:' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo 'sudo portiquote-deploy production ${{ github.ref_name }}' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
