@@ -5,7 +5,10 @@ All 54 African countries + lanes to Europe, Asia, the Middle East, and the
 Americas.
 
 **Stack:** Next.js 15 · TypeScript · Tailwind · Supabase (Postgres, Auth, RLS)
-· M-Pesa (Daraja) · Stripe (card fallback) · Resend (email) · Vercel Cron.
+· M-Pesa (Daraja) · Paystack / Stripe (card fallback) · SMTP (email).
+
+Runs either against Supabase's hosted service or, in production, against a
+self-hosted Supabase on our own server — see [DEPLOY.md](DEPLOY.md).
 
 ---
 
@@ -15,7 +18,7 @@ Americas.
 supabase.com → New project → copy Project URL, anon key, service_role key
 (**Settings → API**).
 
-### 2. Run the FIVE migrations, in order (SQL Editor)
+### 2. Run the EIGHT migrations, in order (SQL Editor)
 1. `001_core_schema.sql` — tables, enums, triggers, seeded services
 2. `002_payments_and_rls.sql` — payments ledger + all RLS (monetisation rules)
 3. `003_reviews_and_fixes.sql` — reviewer names + two RLS fixes
@@ -23,14 +26,21 @@ supabase.com → New project → copy Project URL, anon key, service_role key
    3 seeded articles
 5. `005_membership_lifecycle.sql` — renewal-reminder tracking, **realtime
    messages**
+6. `006_claim_listings.sql` — claiming an unclaimed company listing
+7. `007_paystack_provider.sql` — Paystack as a payment provider
+8. `008_direct_message_premium.sql` — direct messaging gated on Premium
+
+On the self-hosted deployment you do not run these by hand: `portiquote-deploy`
+applies any that are outstanding, tracked in a `schema_migrations` table.
 
 ### 3. Environment
 `cp .env.example .env.local`, then fill in:
 - **Supabase** URL + anon + service_role keys
 - **M-Pesa (Daraja)** sandbox keys; shortcode `174379`; `MPESA_CALLBACK_URL`
   must be publicly reachable (`ngrok http 3000` locally)
-- **Resend** `RESEND_API_KEY`, `EMAIL_FROM` (verify your domain for real
-  recipients), `EMAIL_ADMIN` for contact-form mail
+- **Email (SMTP)** `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
+  `EMAIL_FROM`, and `EMAIL_ADMIN` for contact-form mail. Leave `SMTP_HOST`
+  unset in development and mail is logged instead of sent.
 - **Stripe** (optional card fallback): `STRIPE_SECRET_KEY`, then create a
   webhook endpoint → `https://your-domain.com/api/stripe/webhook` listening to
   `checkout.session.completed` → paste `STRIPE_WEBHOOK_SECRET`.
