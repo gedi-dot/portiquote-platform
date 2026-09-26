@@ -30,7 +30,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ROOT=/opt/portiquote
 IMAGE=ghcr.io/gedi-dot/portiquote-platform
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-HTPASSWD=/etc/nginx/portiquote-staging.htpasswd
+# Deliberately NOT under /etc/nginx. That directory is not traversable by the
+# nginx worker user on this server, and auth_basic_user_file is read by the
+# worker at request time, not by the root master at startup — so a file there
+# fails with "Permission denied" and every authenticated request 500s.
+HTPASSWD_DIR=/etc/portiquote
+HTPASSWD="${HTPASSWD_DIR}/staging.htpasswd"
 
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 ok()  { printf '  \033[32mv\033[0m %s\n' "$*"; }
@@ -169,6 +174,7 @@ done
 
 # ----------------------------------------------------------- staging password --
 say "Staging basic auth"
+install -d -o root -g root -m 755 "$HTPASSWD_DIR"
 if [ -f "$HTPASSWD" ]; then
     ok "${HTPASSWD} exists — left untouched"
 else
