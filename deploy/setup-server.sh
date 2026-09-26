@@ -215,10 +215,16 @@ OWNER="$(awk -F': ' '$1=="portiquote.com"{print $2}' /etc/virtual/domainowners 2
 if [ -n "$OWNER" ]; then
     ok "portiquote.com belongs to DirectAdmin user '${OWNER}'"
     DOMDIR="/usr/local/directadmin/data/users/${OWNER}/domains"
-    if grep -qx 'staging' "${DOMDIR}/portiquote.com.subdomains" 2>/dev/null; then
-        ok "the staging subdomain exists"
+    # DirectAdmin names a subdomain's files by its FULL name in the same domains
+    # directory, so staging.portiquote.com.* sitting there is the thing to look
+    # for. Matched loosely on purpose: which of those files exist varies by
+    # DirectAdmin version, and this check only has to answer "does DirectAdmin
+    # know about this subdomain yet".
+    if compgen -G "${DOMDIR}/staging.portiquote.com*" > /dev/null 2>&1; then
+        ok "DirectAdmin knows staging.portiquote.com"
     else
-        note "no 'staging' subdomain found — add it in DirectAdmin -> Subdomain Management"
+        note "no staging.portiquote.com files in ${DOMDIR}"
+        note "add the subdomain in DirectAdmin -> Subdomain Management first"
     fi
     note "install the nginx snippets from ${HERE}/nginx/ into:"
     note "  ${DOMDIR}/"
