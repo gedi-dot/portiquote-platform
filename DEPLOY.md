@@ -71,15 +71,14 @@ sudo nano /opt/portiquote/production/.env
 `SMTP_PASS` (the DirectAdmin mailbox password), `EMAIL_ADMIN`, and the payment
 keys. Everything else is already set.
 
-### Make the GHCR package public
+### If the pull is denied
 
-GitHub Container Registry packages are private even when the repository is
-public, and `docker pull` on the server has no credentials.
+A package published from a public repository is normally public too, so there is
+usually nothing to do here. If the deploy fails at the pull step with `denied`,
+the package is private and the server has no credentials:
 
 github.com/gedi-dot/portiquote-platform → **Packages** → portiquote-platform →
 *Package settings* → **Change visibility** → Public.
-
-Without this, the deploy fails at the pull step with `denied`.
 
 ### SSL
 

@@ -208,23 +208,32 @@ ok "/etc/cron.d/portiquote (02:15 backup, 06:30 housekeeping, production only)"
 
 # -------------------------------------------------------------- DirectAdmin ---
 say "DirectAdmin"
-for dom in portiquote.com staging.portiquote.com; do
-    OWNER="$(awk -F': ' -v d="$dom" '$1==d{print $2}' /etc/virtual/domainowners 2>/dev/null || true)"
-    if [ -n "$OWNER" ]; then
-        ok "${dom} belongs to DirectAdmin user '${OWNER}'"
+# Only real domains appear in domainowners. A subdomain belongs to its parent, so
+# staging.portiquote.com is never listed there — look in the parent's subdomain
+# list instead, or an existing subdomain reads as missing.
+OWNER="$(awk -F': ' '$1=="portiquote.com"{print $2}' /etc/virtual/domainowners 2>/dev/null || true)"
+if [ -n "$OWNER" ]; then
+    ok "portiquote.com belongs to DirectAdmin user '${OWNER}'"
+    DOMDIR="/usr/local/directadmin/data/users/${OWNER}/domains"
+    if grep -qx 'staging' "${DOMDIR}/portiquote.com.subdomains" 2>/dev/null; then
+        ok "the staging subdomain exists"
     else
-        note "${dom} is NOT in /etc/virtual/domainowners — add it in DirectAdmin first"
+        note "no 'staging' subdomain found — add it in DirectAdmin -> Subdomain Management"
     fi
-done
-note "nginx snippets to install are in ${HERE}/nginx/ — see the file headers"
+    note "install the nginx snippets from ${HERE}/nginx/ into:"
+    note "  ${DOMDIR}/"
+else
+    note "portiquote.com is NOT in /etc/virtual/domainowners — add it in DirectAdmin first"
+fi
 
 say "Next"
 cat <<EOF
   1. Fill in the blanks:   sudo nano ${ROOT}/staging/.env
                            sudo nano ${ROOT}/production/.env
-  2. Make the GHCR package public, or the pull will fail:
+  2. Only if step 4 fails with "denied", the GHCR package is private:
      github.com/gedi-dot/portiquote-platform/pkgs/container/portiquote-platform
      -> Package settings -> Change visibility -> Public
+     (a package published from a public repository is usually public already)
   3. Install the nginx snippets (see ${HERE}/nginx/).
   4. Deploy staging first:  sudo portiquote-deploy staging main
   5. Check it:              curl -sI http://127.0.0.1:3410/ | head -1
