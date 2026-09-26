@@ -113,13 +113,21 @@ standalone server block instead, the same way `tool.perxli.com` already runs her
 
 ```bash
 sudo install -o root -g root -m 644 deploy/nginx/portiquote-staging.conf \
-  /etc/nginx/conf.d/portiquote-staging.conf
+  /etc/nginx/sites-available/portiquote-staging
+sudo ln -sfn /etc/nginx/sites-available/portiquote-staging \
+  /etc/nginx/sites-enabled/portiquote-staging
 ```
+
+`sites-enabled` because that is what `/etc/nginx/nginx-includes.conf` globs.
+`/etc/nginx/conf.d/` is **not** globbed — `tool_perxli.conf` is included there by
+name — so a file dropped into `conf.d` is silently ignored. And since
+`sites-enabled/*` matches everything, never leave a backup copy in that directory:
+a `.bak` would be loaded as live config.
 
 That file needs no certificate of its own: portiquote.com's DirectAdmin
 certificate is a wildcard (`*.portiquote.com`), so it already covers staging and
-keeps covering it across renewals. And because DirectAdmin never rewrites
-`/etc/nginx/conf.d/`, it survives `rewrite_confs`.
+keeps covering it across renewals. DirectAdmin rewrites neither path, so it
+survives `rewrite_confs`.
 
 Then:
 
