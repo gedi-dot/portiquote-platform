@@ -1,5 +1,6 @@
-# Self-hosted production image. Built on the server by deploy/portiquote-deploy;
-# Vercel ignores this file.
+# Self-hosted production image. Built once by .github/workflows/release.yml and
+# published to GHCR; the same image is promoted from staging to production by
+# re-tagging the digest. Vercel ignores this file.
 
 FROM node:22-alpine AS deps
 WORKDIR /app
@@ -11,14 +12,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # NEXT_PUBLIC_* values are inlined into the browser bundle at build time, so
-# they must be present here — setting them only at runtime has no effect.
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ARG NEXT_PUBLIC_SITE_URL
+# only things that are the SAME in every environment may appear here. The
+# Supabase URL and anon key are deliberately absent: the browser reaches
+# Supabase same-origin and reads the anon key from a cookie middleware sets,
+# so one image serves staging and production. See lib/supabase/client.ts.
+#
+# The site URL is the exception — canonical and Open Graph URLs end up in
+# statically rendered HTML, so they must be production's address everywhere.
+# Per-environment links use APP_ORIGIN at runtime. See lib/site.ts.
+ARG NEXT_PUBLIC_SITE_URL=https://portiquote.com
 ARG NEXT_PUBLIC_SITE_NAME=PortiQuote
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL \
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY \
-    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME \
     NEXT_OUTPUT=standalone \
     NEXT_TELEMETRY_DISABLED=1
