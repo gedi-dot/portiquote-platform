@@ -1,18 +1,18 @@
 # Staging: staging.portiquote.com
 #
 # Same as the production snippet on different ports, plus two things that keep
-# staging out of public view. Install as BOTH:
+# staging out of public view. Install as:
 #
-#   /usr/local/directadmin/data/users/<user>/domains/staging.portiquote.com.cust_nginx_ssl.conf
-#   /usr/local/directadmin/data/users/<user>/domains/staging.portiquote.com.cust_nginx.conf
+#   /usr/local/directadmin/data/users/admin/domains/staging.portiquote.com.cust_nginx_https
 #
-# Then:
+# A subdomain gets its own custom-config file, named by its full name, in the
+# parent domain's directory. Then:
 #
 #   cd /usr/local/directadmin/custombuild && ./build rewrite_confs
 #   nginx -t && systemctl reload nginx
 #
-# See the production snippet for the notes about DirectAdmin owning the server
-# block and about never installing Ubuntu's nginx package.
+# See the production snippet for the notes about the suffixes, about DirectAdmin
+# owning the server block, and about never installing Ubuntu's nginx package.
 
 # Applies to every location below, including the proxied ones: a staging copy of
 # a live marketplace must not end up in a search index competing with production.
@@ -71,10 +71,12 @@ location / {
     proxy_read_timeout 60s;
 }
 
-# Let's Encrypt renewal must not be behind the password, or the certificate will
-# silently stop renewing and the site will expire in 90 days.
+# Let's Encrypt renewal must not sit behind the password, or the certificate stops
+# renewing and the site expires in 90 days. No `root` here on purpose: DirectAdmin
+# writes challenge files under the domain's own document root, so inheriting the
+# server block's root is both correct and version-proof. Renewal normally
+# validates over plain HTTP, which this file does not cover at all — this is here
+# so that it still works if it ever validates over HTTPS.
 location ^~ /.well-known/acme-challenge/ {
     auth_basic off;
-    root /var/www/html;
-    try_files $uri =404;
 }

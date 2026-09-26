@@ -91,10 +91,12 @@ its own `public_html`.
 
 ### nginx
 
-Copy the two snippets from `deploy/nginx/` into place — each as both
-`.cust_nginx.conf` and `.cust_nginx_ssl.conf` under
-`/usr/local/directadmin/data/users/<user>/domains/`. The file headers give the
-exact paths. Then:
+Copy the two snippets from `deploy/nginx/` into
+`/usr/local/directadmin/data/users/admin/domains/`, keeping their filenames.
+DirectAdmin picks them up by name: the `.cust_nginx_https` suffix means HTTPS
+only, which is what we want, since Force SSL redirects plain HTTP before it would
+reach a proxy. A subdomain's file lives in the parent domain's directory, named by
+its full name. Then:
 
 ```bash
 cd /usr/local/directadmin/custombuild && sudo ./build rewrite_confs
