@@ -1,19 +1,23 @@
 # Production: portiquote.com
 #
-# Install as BOTH of these, so a plain-HTTP request is proxied too (DirectAdmin's
-# own redirect to HTTPS keeps working, and health checks over :80 don't 404):
+# Install as:
 #
-#   /usr/local/directadmin/data/users/<user>/domains/portiquote.com.cust_nginx_ssl.conf
-#   /usr/local/directadmin/data/users/<user>/domains/portiquote.com.cust_nginx.conf
+#   /usr/local/directadmin/data/users/admin/domains/portiquote.com.cust_nginx_https
 #
 # Then rebuild and reload:
 #
 #   cd /usr/local/directadmin/custombuild && ./build rewrite_confs
 #   nginx -t && systemctl reload nginx
 #
+# The suffix chooses which server block DirectAdmin inserts this into:
+# `.cust_nginx_https` is HTTPS only, `.cust_nginx_http` is HTTP only, and plain
+# `.cust_nginx` is both. HTTPS only is right here, because Force SSL redirects
+# plain HTTP before it would ever reach a proxy.
+#
 # DirectAdmin owns the surrounding `server` block, the certificate and the
-# redirects. This file only adds location blocks inside it, so do not repeat
-# listen, server_name or ssl_* directives here.
+# redirects. This file only adds location blocks inside it, so do not add
+# listen, server_name or ssl_* directives here. The shape matches
+# tenant.ngamiacloud.co.ke.cust_nginx_https, which already works on this server.
 #
 # IMPORTANT: nginx on this server must stay DirectAdmin's CustomBuild build.
 # Ubuntu's nginx package is apt-held because it once overwrote it and took every

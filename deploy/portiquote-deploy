@@ -81,6 +81,24 @@ docker pull --quiet "${IMAGE}:${TAG}" > /dev/null \
 DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:${TAG}" 2>/dev/null || echo 'unknown@unknown')"
 echo "  digest ${DIGEST##*@}"
 
+# Recorded before the first compose command, not after the migrations, because
+# Compose interpolates the WHOLE file even when only one service is named — so
+# `up -d db` still evaluates web.image and fails on an empty IMAGE_TAG.
+#
+# That means .env briefly names a tag that is not yet running, so every failure
+# path from here on has to put the old one back. The trap does that, rather than
+# each `die` having to remember to.
+DEPLOYED=0
+restore_tag() {
+    [ "$DEPLOYED" -eq 1 ] && return 0
+    [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ] || return 0
+    sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${PREV_TAG}|" .env
+    echo "deploy: .env left at ${PREV_TAG}" >&2
+}
+trap restore_tag EXIT
+
+sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${TAG}|" .env
+
 # ------------------------------------------------------------------ database --
 # Up first and on its own: migrations have to land before the code that needs
 # them starts serving.
@@ -131,9 +149,6 @@ done
 [ "$APPLIED" -eq 0 ] && echo "  schema already up to date"
 
 # --------------------------------------------------------------------- start --
-# Written before starting, so .env always records what is actually running and a
-# bare `portiquote-deploy <env>` repeats it.
-sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${TAG}|" .env
 docker compose up -d
 
 # --------------------------------------------------------------- healthcheck --
@@ -158,6 +173,8 @@ healthy() {
 # something is genuinely wrong.
 for _ in $(seq 1 30); do
     if healthy > /dev/null 2>&1; then
+        # Tells the exit trap to keep the new tag rather than restore the old.
+        DEPLOYED=1
         echo "$(date '+%F %T')  ok  ${TAG}  ${DIGEST##*@}" >> "$LOG"
         docker image prune -f > /dev/null
         echo "Live on ${ENV}: ${TAG}"
@@ -172,6 +189,8 @@ docker compose logs --tail 40 web || true
 
 if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ]; then
     echo "Rolling back to ${PREV_TAG}"
+    # Written here as well as in the exit trap, because the tag has to be back in
+    # .env before Compose reads it to start the old container.
     sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${PREV_TAG}|" .env
     docker compose up -d web
     die "${TAG} failed its health check; rolled back to ${PREV_TAG}"
