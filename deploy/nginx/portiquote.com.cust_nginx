@@ -1,0 +1,91 @@
+# Production: portiquote.com
+#
+# Install as:
+#
+#   /usr/local/directadmin/data/users/admin/domains/portiquote.com.cust_nginx
+#
+# Then rebuild and reload (as root — custombuild is not readable otherwise, and a
+# failed `cd` before `&&` silently skips the rebuild):
+#
+#   sudo bash -c 'cd /usr/local/directadmin/custombuild && ./build rewrite_confs'
+#   sudo grep -n 'proxy_pass http://127.0.0.1:3400' /usr/local/directadmin/data/users/admin/nginx.conf
+#   sudo nginx -t && sudo systemctl reload nginx
+#
+# The grep is the real check: if it prints nothing, DirectAdmin did not pick the
+# file up, and nginx -t will still pass on the unchanged default vhost.
+#
+# The name must be exactly `.cust_nginx`. DirectAdmin 1.711 has no
+# `.cust_nginx_http` / `.cust_nginx_https` variants — files with those suffixes
+# are ignored. Its content is inserted at the template's CUSTOM token (never write
+# that token with its pipes in here — DirectAdmin's template parser does not know
+# about nginx comments), at the top of BOTH
+# the :80 and :443 server blocks. On :80 that is harmless: Force SSL is a
+# server-level `return 301`, which runs before any location is chosen.
+#
+# Why every location here is a REGEX. The server runs webserver=nginx_apache, so
+# DirectAdmin always generates its own `location /` proxying to Apache on
+# 8080/8081, which serves public_html. A second `location /` is a duplicate and
+# fails nginx -t. Regex locations are tried before a plain prefix like `/`, and in
+# the order they appear, so these win, and the first match among them is used.
+#
+# What still reaches DirectAdmin rather than the app:
+#   - its `^~` prefixes (acme-challenge, /roundcube, /phpMyAdmin), because `^~`
+#     stops the regex search — so Let's Encrypt renewals keep working;
+#   - its `=` exact matches (mail autoconfig, security.txt);
+#   - /webmail, /pma, /phpmyadmin and /.well-known/, excluded below, because
+#     DirectAdmin handles those with regex locations that come after ours.
+# nawirides.co.ke.cust_nginx on this server uses the same shape.
+#
+# DirectAdmin owns the surrounding server blocks, the certificate and the
+# redirects, so do not add listen, server_name or ssl_* directives here.
+#
+# IMPORTANT: nginx on this server must stay DirectAdmin's CustomBuild build.
+# Ubuntu's nginx package is apt-held because it once overwrote it and took every
+# site down. Never `apt install nginx` to satisfy anything in this file.
+
+client_max_body_size 8m;
+
+# ---------------------------------------------------------------- Supabase ----
+# The browser talks to Supabase same-origin; these three prefixes are what
+# supabase-js appends to its base URL. The path is passed through unchanged,
+# because the gateway container expects to see the prefix and strips it itself.
+#
+# WebSocket first. Without the upgrade headers the three live message threads
+# fall back to nothing and simply never update.
+location ~ ^/realtime/v1/ {
+    proxy_pass http://127.0.0.1:8400;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade           $http_upgrade;
+    proxy_set_header Connection        "upgrade";
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
+
+location ~ ^/(auth|rest)/v1/ {
+    proxy_pass http://127.0.0.1:8400;
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# --------------------------------------------------------------------- app ----
+# Everything else, minus DirectAdmin's webmail/phpMyAdmin shortcuts and
+# /.well-known/ (see the header).
+location ~ ^/(?!(webmail|roundcube|phpmyadmin|phpMyAdmin|pma)(/|$)|\.well-known/) {
+    proxy_pass http://127.0.0.1:3400;
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # Next streams its responses; buffering them defeats that and delays the
+    # first byte until the whole page is ready.
+    proxy_buffering off;
+    proxy_read_timeout 60s;
+}

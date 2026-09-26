@@ -99,12 +99,21 @@ DirectAdmin domain.
 config that DirectAdmin inlines into the vhost it generates:
 
 ```bash
-sudo install -o root -g root -m 644 deploy/nginx/portiquote.com.cust_nginx_https \
-  /usr/local/directadmin/data/users/admin/domains/portiquote.com.cust_nginx_https
+sudo install -o root -g root -m 644 deploy/nginx/portiquote.com.cust_nginx \
+  /usr/local/directadmin/data/users/admin/domains/portiquote.com.cust_nginx
 ```
 
-The `.cust_nginx_https` suffix means HTTPS only, which is right because Force SSL
-redirects plain HTTP before it would reach a proxy.
+The name must be exactly `.cust_nginx`. DirectAdmin (1.711 here) has no
+`_http`/`_https` variants and silently ignores files with those suffixes — which
+is how production first came up showing DirectAdmin's default page. The content
+lands at the top of both the :80 and :443 server blocks; on :80 Force SSL's
+server-level redirect runs first, so it never proxies plain HTTP.
+
+The server runs `webserver=nginx_apache`, so DirectAdmin always generates its own
+`location /` pointing at Apache and `public_html`. That is why every location in
+the snippet is a regex: regexes beat a plain `/` prefix, and a second
+`location /` would fail as a duplicate. The file's header lists what still
+reaches DirectAdmin (ACME challenges, webmail, phpMyAdmin).
 
 **Staging** — `staging.portiquote.com` is deliberately *not* a DirectAdmin domain,
 only a DNS record. DirectAdmin therefore generates no vhost for it and has nowhere
@@ -133,9 +142,15 @@ survives `rewrite_confs`.
 Then:
 
 ```bash
-cd /usr/local/directadmin/custombuild && sudo ./build rewrite_confs
+sudo bash -c 'cd /usr/local/directadmin/custombuild && ./build rewrite_confs'
+sudo grep -n 'proxy_pass http://127.0.0.1:3400' /usr/local/directadmin/data/users/admin/nginx.conf
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+The `cd` has to run as root — `custombuild` is not readable otherwise, and a
+failed `cd` before `&&` silently skips the rebuild. The `grep` is the real check:
+it must print two lines (the :80 and :443 blocks). `nginx -t` passes just as
+happily on a vhost that never picked the snippet up.
 
 > nginx on this server must stay DirectAdmin's CustomBuild build. Ubuntu's
 > `nginx` package is apt-held because it once overwrote it and took every site on
@@ -172,6 +187,31 @@ fails, the previous tag is put back. History is in
 Changing a value in `.env` needs only `sudo docker compose up -d` from
 `/opt/portiquote/<env>/` — no rebuild. That is the point of reading configuration
 at runtime.
+
+`compose.yaml` and `supabase/gateway.conf` are not shipped in the image, so the
+deploy never updates them. After changing either in the repo, install it into
+each environment and **recreate** the gateway. `nginx -s reload` is not enough:
+the gateway config is a template rendered once at container start, and it is a
+single-file bind mount that `install` replaces with a new inode the running
+container never sees.
+
+```bash
+sudo install -o root -g root -m 644 deploy/compose.yaml /opt/portiquote/<env>/compose.yaml
+sudo install -o root -g root -m 644 deploy/supabase/gateway.conf \
+  /opt/portiquote/<env>/supabase/gateway.conf
+cd /opt/portiquote/<env> && sudo docker compose up -d --force-recreate gateway
+```
+
+**The gateway requires an API key on `/rest/v1`**, as upstream's Kong does: the
+anon or service-role key from `.env`, in an `apikey` header or query parameter.
+Without it PostgREST would answer anyone as `anon`, including with the OpenAPI
+description of every exposed table. supabase-js always sends it, so the app
+needs nothing; a hand-written `curl` does:
+
+```bash
+curl -H "apikey: $(sudo sed -n 's/^ANON_KEY=//p' /opt/portiquote/<env>/.env)" \
+  https://portiquote.com/rest/v1/
+```
 
 ### Rollback, and its one limit
 
