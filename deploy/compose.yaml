@@ -28,7 +28,13 @@ services:
     # reaches it with `docker compose exec db psql` when applying migrations.
     environment:
       POSTGRES_HOST: /var/run/postgresql
-      POSTGRES_USER: postgres
+      # POSTGRES_USER is deliberately NOT set. The image ships
+      # POSTGRES_USER=supabase_admin, and its /docker-entrypoint-initdb.d/
+      # migrate.sh connects as that role to install the auth and realtime schemas
+      # and the anon/authenticated/service_role roles. Setting it to `postgres`
+      # here makes initdb create the wrong superuser, migrate.sh fails with
+      # `role "supabase_admin" does not exist`, and the cluster comes up looking
+      # healthy while containing none of Supabase's roles or schemas.
       POSTGRES_DB: postgres
       POSTGRES_PORT: 5432
       PGPORT: 5432

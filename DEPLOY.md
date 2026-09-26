@@ -185,6 +185,21 @@ next improvement.
 3.5 GB, against 11 GB with other customers' containers on the box. There is 2 GB
 of swap as a cushion. `MEM_*` in each `.env` tunes it.
 
+**If the deploy says the database is missing Supabase's roles.** The image's
+`migrate.sh` installs the auth and realtime schemas and the
+`anon`/`authenticated`/`service_role` roles, and it only runs on an empty data
+directory. If it failed, the cluster still comes up healthy but empty of all
+that. Wipe and let it initialise again:
+
+```bash
+cd /opt/portiquote/<env> && sudo docker compose down && sudo rm -rf volumes/db/data
+sudo portiquote-deploy <env> <tag>
+```
+
+`docker compose logs db` says why it failed the first time. Do not set
+`POSTGRES_USER` in `compose.yaml` — the image needs its own value
+(`supabase_admin`), and overriding it is what causes this.
+
 **Rotating the database password.** `POSTGRES_PASSWORD` is applied by an init
 script that only runs on an empty data directory. Changing it in `.env` later does
 not change it in Postgres — the services simply stop being able to log in. To

@@ -123,6 +123,18 @@ docker rm -f "$CID" > /dev/null
 
 psql_q() { docker compose exec -T db psql -qtAX -U postgres -d postgres "$@"; }
 
+# A cluster whose first start did not complete Supabase's own initialisation
+# reports healthy and accepts connections, but has none of its roles or schemas.
+# Checked here rather than discovered part way through the app's migrations, which
+# is a far more confusing place to find out.
+if [ "$(psql_q -c "SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin';" 2>/dev/null)" != 1 ]; then
+    echo "The database has no supabase_admin role, so Supabase's initialisation" >&2
+    echo "did not run. It only runs on an empty data directory, so the fix is:" >&2
+    echo "    cd ${ROOT} && sudo docker compose down && sudo rm -rf volumes/db/data" >&2
+    echo "then deploy again. Check 'docker compose logs db' for why it failed." >&2
+    die "database is missing Supabase's roles"
+fi
+
 psql_q -v ON_ERROR_STOP=1 -c "
     CREATE TABLE IF NOT EXISTS public.schema_migrations (
         filename   text        PRIMARY KEY,
