@@ -192,7 +192,12 @@ services:
     ports:
       - "127.0.0.1:${PORT_SUPABASE:?missing in .env}:8000"
     healthcheck:
-      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:8000/auth/v1/health"]
+      # 127.0.0.1, not localhost. The config is mounted read-only, so the image's
+      # 10-listen-on-ipv6-by-default.sh cannot add a `listen [::]:8000`, and
+      # `localhost` resolves to ::1 first inside the container — where nothing is
+      # listening. The route itself works; only the check was looking in the
+      # wrong place, which left the gateway "unhealthy" and web waiting on it.
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8000/auth/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 3
