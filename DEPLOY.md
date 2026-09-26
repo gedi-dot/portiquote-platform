@@ -12,7 +12,7 @@ browser ──https──────>│ DirectAdmin nginx                     
                       │     /                      ─> :3400 ──┼─> web (Next.js)
                       │   staging.portiquote.com              │
                       │     …                      ─> :8410   │
-                      │     /  (basic auth)        ─> :3410   │
+                      │     /                      ─> :3410   │
                       └───────────────────────────────────────┘
 
 per environment:  gateway ─> auth (GoTrue) ─┐
@@ -51,7 +51,8 @@ sudo bash /tmp/pq/deploy/setup-server.sh
 It creates `/opt/portiquote/{production,staging}`, generates every secret
 (including the `anon` and `service_role` JWTs, which are signed with each
 environment's own `JWT_SECRET`), installs the commands and the cron jobs, and
-prints the staging basic-auth password **once**. Write that down.
+sets staging's own mail identity (`noreply.staging@portiquote.com`) so the two
+environments can never send as each other.
 
 It is idempotent, never overwrites an existing `.env`, and never touches a
 database that already exists.
@@ -239,10 +240,17 @@ not change it in Postgres — the services simply stop being able to log in. To
 rotate, `ALTER` the roles in `psql` and edit `.env` in the same window.
 
 **Staging must not be indexed.** It serves production's canonical URLs by design
-(see `lib/site.ts`), so the nginx snippet sets `X-Robots-Tag: noindex` and puts
-the app behind basic auth. Basic auth is deliberately *not* applied to the
-`/auth/v1`, `/rest/v1` and `/realtime/v1` paths: a browser cannot send two
-`Authorization` headers, so it would break sign-in and every API read.
+(see `lib/site.ts`), so its nginx config sets
+`X-Robots-Tag: noindex, nofollow, noarchive`. It is otherwise open — anyone who
+knows the name can use it. That is deliberate: it holds no real data, and it is
+recognisable as staging from both the badge in the UI and the
+`noreply.staging@` sender on anything it emails.
+
+**Telling the two apart in a browser.** `components/EnvBadge.tsx` shows a coral
+`STAGING` pill in the corner on any environment whose `APP_ENV` is not
+`production`. It reads a cookie set by middleware rather than `process.env`,
+because most pages are statically prerendered — a value read on the server would
+be fixed at build time, and the same image runs in both environments.
 
 **Secrets never cross environments.** `JWT_SECRET`, `ANON_KEY` and
 `SUPABASE_SERVICE_ROLE_KEY` are generated together per environment. Copying

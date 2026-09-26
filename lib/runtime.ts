@@ -39,8 +39,17 @@ export function supabaseAnonKey(): string {
   return key;
 }
 
-// Name of the cookie that carries the anon key to the browser. Set by
-// middleware on every request, so it follows the environment rather than the
-// build. The anon key is public — it only ever grants what RLS allows — which
-// is why a JS-readable cookie is the right place for it.
+// Which environment this container is. Used to mark non-production instances in
+// the UI so a staging tab is never mistaken for the live site.
+export function appEnv(): string {
+  return process.env.APP_ENV ?? "development";
+}
+
+// Names of the cookies middleware sets on every request, so both values follow
+// the container rather than the build — which is what lets one image serve
+// staging and production.
+//
+// The anon key is public: it only ever grants what RLS allows, which is why a
+// JS-readable cookie is the right place for it.
 export const ANON_KEY_COOKIE = "pq_anon";
+export const ENV_COOKIE = "pq_env";
