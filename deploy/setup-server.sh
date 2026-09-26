@@ -215,15 +215,15 @@ OWNER="$(awk -F': ' '$1=="portiquote.com"{print $2}' /etc/virtual/domainowners 2
 if [ -n "$OWNER" ]; then
     ok "portiquote.com belongs to DirectAdmin user '${OWNER}'"
     DOMDIR="/usr/local/directadmin/data/users/${OWNER}/domains"
-    # DirectAdmin names a subdomain's files by its FULL name in the same domains
-    # directory, so staging.portiquote.com.* sitting there is the thing to look
-    # for. Matched loosely on purpose: which of those files exist varies by
-    # DirectAdmin version, and this check only has to answer "does DirectAdmin
-    # know about this subdomain yet".
-    if compgen -G "${DOMDIR}/staging.portiquote.com*" > /dev/null 2>&1; then
-        ok "DirectAdmin knows staging.portiquote.com"
+    # Subdomains are listed in the parent's .subdomains file, one bare label per
+    # line — they are NOT separate entries in domainowners. A subdomain does get
+    # its own custom-config files, named by its full name in this same directory,
+    # but only once a custom config has been created, so their absence proves
+    # nothing about whether the subdomain exists.
+    if grep -qx 'staging' "${DOMDIR}/portiquote.com.subdomains" 2>/dev/null; then
+        ok "the staging subdomain exists"
     else
-        note "no staging.portiquote.com files in ${DOMDIR}"
+        note "no 'staging' line in ${DOMDIR}/portiquote.com.subdomains"
         note "add the subdomain in DirectAdmin -> Subdomain Management first"
     fi
     note "install the nginx snippets from ${HERE}/nginx/ into:"
