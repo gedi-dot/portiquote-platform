@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import Navbar from "@/components/Navbar";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -23,16 +24,27 @@ function Arcs() {
   );
 }
 
-export const revalidate = 300; // speed pass: cached, refreshed every 300s
+// Rendered per request, with the counts cached for 300s — the same speed as the
+// old build-time prerender, but the cache fills at runtime. It must not be
+// prerendered: the image is built in CI, where no database exists, so anything
+// fetched at build time would bake an empty page into the release.
+export const dynamic = "force-dynamic";
+
+const getForwarderCounts = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const [{ count: fwdCount }, { count: unclaimedCount }] = await Promise.all([
+      supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true),
+      supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true).eq("is_claimed", false),
+    ]);
+    return { forwarders: fwdCount ?? 0, unclaimed: unclaimedCount ?? 0 };
+  },
+  ["home-forwarder-counts"],
+  { revalidate: 300 }
+);
 
 export default async function HomePage() {
-  const supabase = createPublicClient();
-  const [{ count: fwdCount }, { count: unclaimedCount }] = await Promise.all([
-    supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true),
-    supabase.from("forwarder_companies").select("id", { count: "exact", head: true }).eq("is_published", true).eq("is_claimed", false),
-  ]);
-  const forwarders = fwdCount ?? 0;
-  const unclaimed = unclaimedCount ?? 0;
+  const { forwarders, unclaimed } = await getForwarderCounts();
 
   return (
     <main className="min-h-screen bg-mist">

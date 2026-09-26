@@ -1,33 +1,46 @@
 import type { MetadataRoute } from "next";
+import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { SITE_URL } from "@/lib/site";
 import { countryCode, countryFromCode, REGIONS } from "@/lib/format";
 
-export const revalidate = 3600; // refresh hourly
+// Built per request and cached for an hour, rather than prerendered at build
+// time — the CI build has no database. See app/page.tsx for the full reasoning.
+export const dynamic = "force-dynamic";
 
 const u = (p: string) => `${SITE_URL}${p}`;
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const db = createPublicClient();
+// Only the query results are cached. The entries are assembled outside, because
+// they carry Date objects and unstable_cache would serialise those to strings.
+const getSitemapRows = unstable_cache(
+  async () => {
+    const db = createPublicClient();
+    const [{ data: fwds }, { data: posts }, { data: laneRows }] =
+      await Promise.all([
+        db
+          .from("forwarder_companies")
+          .select("slug, updated_at, hq_country")
+          .eq("is_published", true)
+          .limit(5000),
+        db
+          .from("posts")
+          .select("slug, published_at")
+          .eq("is_published", true)
+          .limit(1000),
+        db
+          .from("forwarder_lanes")
+          .select("origin_country, destination_country, forwarder_companies!inner(id)")
+          .eq("forwarder_companies.is_published", true)
+          .limit(5000),
+      ]);
+    return { fwds, posts, laneRows };
+  },
+  ["sitemap-rows"],
+  { revalidate: 3600 }
+);
 
-  const [{ data: fwds }, { data: posts }, { data: laneRows }] =
-    await Promise.all([
-      db
-        .from("forwarder_companies")
-        .select("slug, updated_at, hq_country")
-        .eq("is_published", true)
-        .limit(5000),
-      db
-        .from("posts")
-        .select("slug, published_at")
-        .eq("is_published", true)
-        .limit(1000),
-      db
-        .from("forwarder_lanes")
-        .select("origin_country, destination_country, forwarder_companies!inner(id)")
-        .eq("forwarder_companies.is_published", true)
-        .limit(5000),
-    ]);
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const { fwds, posts, laneRows } = await getSitemapRows();
 
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [

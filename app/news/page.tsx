@@ -1,20 +1,32 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import Navbar from "@/components/Navbar";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatDate } from "@/lib/format";
 
-export const revalidate = 86400; // speed pass: cached, refreshed every 86400s
+// Cached for a day at runtime rather than prerendered at build time — the CI
+// build has no database. See app/page.tsx for the full reasoning.
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "News & Insights" };
 
+const getPublishedPosts = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("posts")
+      .select("id, title, slug, excerpt, type, published_at, created_at")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+    return data;
+  },
+  ["news-published-posts"],
+  { revalidate: 86400 }
+);
+
 export default async function NewsPage() {
-  const supabase = createPublicClient();
-  const { data: posts } = await supabase
-    .from("posts")
-    .select("id, title, slug, excerpt, type, published_at, created_at")
-    .eq("is_published", true)
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+  const posts = await getPublishedPosts();
 
   return (
     <>
