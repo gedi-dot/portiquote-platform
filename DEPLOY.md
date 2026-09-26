@@ -91,12 +91,37 @@ its own `public_html`.
 
 ### nginx
 
-Copy the two snippets from `deploy/nginx/` into
-`/usr/local/directadmin/data/users/admin/domains/`, keeping their filenames.
-DirectAdmin picks them up by name: the `.cust_nginx_https` suffix means HTTPS
-only, which is what we want, since Force SSL redirects plain HTTP before it would
-reach a proxy. A subdomain's file lives in the parent domain's directory, named by
-its full name. Then:
+The two environments are configured differently, because only one of them is a
+DirectAdmin domain.
+
+**Production** — `portiquote.com` is a DirectAdmin domain, so it uses a custom
+config that DirectAdmin inlines into the vhost it generates:
+
+```bash
+sudo install -o root -g root -m 644 deploy/nginx/portiquote.com.cust_nginx_https \
+  /usr/local/directadmin/data/users/admin/domains/portiquote.com.cust_nginx_https
+```
+
+The `.cust_nginx_https` suffix means HTTPS only, which is right because Force SSL
+redirects plain HTTP before it would reach a proxy.
+
+**Staging** — `staging.portiquote.com` is deliberately *not* a DirectAdmin domain,
+only a DNS record. DirectAdmin therefore generates no vhost for it and has nowhere
+to inline a custom config; requests would fall through to whichever server block
+is default, which on this box is another customer's site. So staging gets a
+standalone server block instead, the same way `tool.perxli.com` already runs here:
+
+```bash
+sudo install -o root -g root -m 644 deploy/nginx/portiquote-staging.conf \
+  /etc/nginx/conf.d/portiquote-staging.conf
+```
+
+That file needs no certificate of its own: portiquote.com's DirectAdmin
+certificate is a wildcard (`*.portiquote.com`), so it already covers staging and
+keeps covering it across renewals. And because DirectAdmin never rewrites
+`/etc/nginx/conf.d/`, it survives `rewrite_confs`.
+
+Then:
 
 ```bash
 cd /usr/local/directadmin/custombuild && sudo ./build rewrite_confs
