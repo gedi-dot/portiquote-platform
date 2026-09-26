@@ -1,39 +1,76 @@
-// Resend email engine.
+// SMTP email engine, over the mail server DirectAdmin runs for the domain.
 //
 // The header logo is a PNG, not the SVG the site uses: Gmail and Outlook strip
 // SVG entirely, so the header would come through blank. It is transparent so it
 // sits on the sea band, drawn at 4x for retina, and carries alt="PortiQuote"
 // so the brand still reads in clients that block images by default.
 //
-// Gracefully no-ops when RESEND_API_KEY is unset so the
-// app runs fine in development without email configured.
+// Gracefully no-ops when SMTP_HOST is unset so the app runs fine in development
+// without email configured.
 
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
-const FROM =
-  process.env.EMAIL_FROM ?? "PortiQuote <onboarding@resend.dev>";
+import nodemailer, { type Transporter } from "nodemailer";
+import { appOrigin } from "@/lib/runtime";
+
+// Links in email must come back to the environment that sent them, so a
+// staging notification never walks the recipient into production.
+const SITE = appOrigin();
+const FROM = process.env.EMAIL_FROM ?? "PortiQuote <noreply@portiquote.com>";
 
 export type Mail = { to: string; subject: string; html: string };
 
+// One pooled transport per container. Pooling matters here because a single RFQ
+// can notify a dozen forwarders, and a fresh TLS handshake per message would
+// both be slow and look like a burst of separate logins to the mail server.
+let cached: Transporter | null = null;
+
+function transport(): Transporter | null {
+  if (cached) return cached;
+
+  const host = process.env.SMTP_HOST;
+  if (!host) return null;
+
+  const port = Number(process.env.SMTP_PORT ?? 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  cached = nodemailer.createTransport({
+    host,
+    port,
+    // 465 is implicit TLS; 587 starts plaintext and upgrades via STARTTLS.
+    secure: port === 465,
+    requireTLS: port !== 465,
+    auth: user && pass ? { user, pass } : undefined,
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 50,
+  });
+  return cached;
+}
+
 export async function sendEmails(mails: Mail[]): Promise<void> {
-  const key = process.env.RESEND_API_KEY;
   const clean = mails.filter((m) => m.to && m.to.includes("@"));
   if (clean.length === 0) return;
-  if (!key) {
-    console.error(`[email] RESEND_API_KEY not set — DROPPED ${clean.length} email(s):`,
-      clean.map((m) => `${m.to} · ${m.subject}`));
+
+  const mailer = transport();
+  if (!mailer) {
+    console.error(
+      `[email] SMTP_HOST not set — DROPPED ${clean.length} email(s):`,
+      clean.map((m) => `${m.to} · ${m.subject}`)
+    );
     return;
   }
-  // Resend batch endpoint takes up to 100 messages per call.
-  for (let i = 0; i < clean.length; i += 100) {
-    const chunk = clean.slice(i, i + 100).map((m) => ({ from: FROM, ...m }));
-    const res = await fetch("https://api.resend.com/emails/batch", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify(chunk),
-    });
-    if (!res.ok) console.error("[email] Resend error", res.status, await res.text());
-  }
+
+  // Sent individually rather than as one message with many recipients, so that
+  // recipients never see each other's addresses. Failures are logged and
+  // skipped: one bad address must not stop the rest of a notification batch.
+  const results = await Promise.allSettled(
+    clean.map((m) => mailer.sendMail({ from: FROM, ...m }))
+  );
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      console.error(`[email] failed to ${clean[i].to}:`, r.reason?.message ?? r.reason);
+    }
+  });
 }
 
 // Branded shell — palette inlined for email-client compatibility.
