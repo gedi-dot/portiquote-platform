@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import EnvBadge from "@/components/EnvBadge";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {children}
         <Footer />
+        <EnvBadge />
       </body>
     </html>
   );

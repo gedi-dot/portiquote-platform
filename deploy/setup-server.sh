@@ -19,7 +19,6 @@
 #
 #   /opt/portiquote/production/     compose.yaml, .env (600), volumes/, migrations/
 #   /opt/portiquote/staging/        the same, on its own ports and secrets
-#   /etc/nginx/portiquote-staging.htpasswd
 #   /usr/local/sbin/portiquote-deploy
 #   /usr/local/sbin/portiquote-cron
 #   /etc/cron.d/portiquote         06:30 UTC membership housekeeping
@@ -30,12 +29,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ROOT=/opt/portiquote
 IMAGE=ghcr.io/gedi-dot/portiquote-platform
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-# Deliberately NOT under /etc/nginx. That directory is not traversable by the
-# nginx worker user on this server, and auth_basic_user_file is read by the
-# worker at request time, not by the root master at startup — so a file there
-# fails with "Permission denied" and every authenticated request 500s.
-HTPASSWD_DIR=/etc/portiquote
-HTPASSWD="${HTPASSWD_DIR}/staging.htpasswd"
 
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 ok()  { printf '  \033[32mv\033[0m %s\n' "$*"; }
@@ -151,6 +144,11 @@ for ENV in production staging; do
             setenv "${D}/.env" PORT_APP           "3410"
             setenv "${D}/.env" PORT_SUPABASE      "8410"
             setenv "${D}/.env" MPESA_CALLBACK_URL "https://staging.portiquote.com/api/mpesa/callback"
+            # A separate mailbox, so a test notification is recognisable as one
+            # and can never appear to come from the live site.
+            setenv "${D}/.env" SMTP_USER          "noreply.staging@portiquote.com"
+            setenv "${D}/.env" SMTP_SENDER_NAME   "PortiQuote Staging"
+            setenv "${D}/.env" EMAIL_FROM         '"PortiQuote Staging <noreply.staging@portiquote.com>"'
             # Leaner: staging serves one or two people at a time.
             setenv "${D}/.env" MEM_DB             "512m"
             setenv "${D}/.env" MEM_REALTIME       "256m"
@@ -171,24 +169,6 @@ for ENV in production staging; do
     done
     ok "ports free or already ours"
 done
-
-# ----------------------------------------------------------- staging password --
-say "Staging basic auth"
-install -d -o root -g root -m 755 "$HTPASSWD_DIR"
-if [ -f "$HTPASSWD" ]; then
-    ok "${HTPASSWD} exists — left untouched"
-else
-    STAGING_PW="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-20)"
-    # apr1 rather than bcrypt: nginx supports it everywhere, and openssl can
-    # produce it without needing apache2-utils installed.
-    printf 'portiquote:%s\n' "$(openssl passwd -apr1 "$STAGING_PW")" > "$HTPASSWD"
-    chmod 644 "$HTPASSWD"     # hashes, read by the nginx worker
-    chown root:root "$HTPASSWD"
-    ok "created ${HTPASSWD}"
-    note "username: portiquote"
-    note "password: ${STAGING_PW}"
-    note "Write it down — it is not stored anywhere in plaintext."
-fi
 
 # --------------------------------------------------------------- commands ----
 say "Commands"
