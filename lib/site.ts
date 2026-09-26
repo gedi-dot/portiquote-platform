@@ -8,6 +8,13 @@ export const SITE_NAME =
 // seen a single word about the page.
 export const SITE_LEGAL_NAME = "PortiQuote Logistics";
 
+// The site's canonical public address, and the only value here baked in at
+// build time. Canonical and Open Graph URLs are written into statically
+// rendered HTML, so they cannot vary per container — meaning this is always
+// production's address, including inside the staging container. That is
+// deliberate: staging is noindex and behind basic auth, so it must never
+// advertise itself as canonical. Anything a user actually follows back into the
+// app — email links, payment returns — uses appOrigin() from lib/runtime.ts.
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
 ).replace(/\/$/, "");

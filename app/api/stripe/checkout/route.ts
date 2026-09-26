@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createCheckoutSession, stripeConfigured } from "@/lib/stripe";
+import { appOrigin } from "@/lib/runtime";
 
 export const runtime = "nodejs";
 
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+// This environment's own origin, so a payment started on staging returns to
+// staging. Read at runtime — see lib/runtime.ts.
+const SITE = appOrigin();
 
 export async function POST(request: Request) {
   if (!stripeConfigured()) {

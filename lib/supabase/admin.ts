@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { supabaseUrl } from "@/lib/runtime";
 
 // Server-ONLY Supabase client using the service-role key. Bypasses Row Level
 // Security, so it is used by the M-Pesa callback / Stripe webhook to write
@@ -6,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 // and never expose SUPABASE_SERVICE_ROLE_KEY to the browser.
 export function createAdminClient() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl(),
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false, autoRefreshToken: false } }
   );

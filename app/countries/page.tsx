@@ -1,23 +1,38 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import Navbar from "@/components/Navbar";
 import { createPublicClient } from "@/lib/supabase/public";
 import { REGIONS, countryCode, flagEmoji } from "@/lib/format";
 
-export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
+// Cached for an hour at runtime rather than prerendered at build time — the CI
+// build has no database. See app/page.tsx for the full reasoning.
+export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Forwarders by Country" };
 
-export default async function CountriesPage() {
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("forwarder_companies")
-    .select("hq_country")
-    .eq("is_published", true);
+// Returns a plain object, not a Map: unstable_cache serialises its result, and a
+// Map would come back from the cache empty.
+const getCountryCounts = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("forwarder_companies")
+      .select("hq_country")
+      .eq("is_published", true);
 
-  const counts = new Map<string, number>();
-  for (const row of data ?? []) {
-    counts.set(row.hq_country, (counts.get(row.hq_country) ?? 0) + 1);
-  }
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      counts[row.hq_country] = (counts[row.hq_country] ?? 0) + 1;
+    }
+    return counts;
+  },
+  ["countries-forwarder-counts"],
+  { revalidate: 3600 }
+);
+
+export default async function CountriesPage() {
+  const byCountry = await getCountryCounts();
+  const counts = new Map(Object.entries(byCountry));
 
   return (
     <>

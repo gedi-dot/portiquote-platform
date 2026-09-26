@@ -1,11 +1,14 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import Navbar from "@/components/Navbar";
 import { createPublicClient } from "@/lib/supabase/public";
 import { countryCode, COUNTRIES, flagEmoji } from "@/lib/format";
 
 
-export const revalidate = 3600; // speed pass: cached, refreshed every 3600s
+// Cached for an hour at runtime rather than prerendered at build time — the CI
+// build has no database. See app/page.tsx for the full reasoning.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Trade Routes & Shipping Corridors",
@@ -14,20 +17,35 @@ export const metadata: Metadata = {
   alternates: { canonical: "/routes" },
 };
 
-export default async function RoutesPage() {
-  const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("forwarder_lanes")
-    .select("origin_country, destination_country, forwarder_companies!inner(id)")
-    .eq("forwarder_companies.is_published", true)
-    .limit(2000);
+// Grouping happens inside the cache, but the result is a plain object of arrays:
+// unstable_cache serialises what it stores, so a Map of Sets would come back
+// from the cache empty.
+const getDestinationsByOrigin = unstable_cache(
+  async () => {
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("forwarder_lanes")
+      .select("origin_country, destination_country, forwarder_companies!inner(id)")
+      .eq("forwarder_companies.is_published", true)
+      .limit(2000);
 
+    const grouped: Record<string, string[]> = {};
+    for (const l of data ?? []) {
+      const seen = (grouped[l.origin_country] ??= []);
+      if (!seen.includes(l.destination_country)) seen.push(l.destination_country);
+    }
+    return grouped;
+  },
+  ["routes-destinations-by-origin"],
+  { revalidate: 3600 }
+);
+
+export default async function RoutesPage() {
   // Group destinations per origin, Africa-first ordering.
-  const byOrigin = new Map<string, Set<string>>();
-  for (const l of data ?? []) {
-    if (!byOrigin.has(l.origin_country)) byOrigin.set(l.origin_country, new Set());
-    byOrigin.get(l.origin_country)!.add(l.destination_country);
-  }
+  const grouped = await getDestinationsByOrigin();
+  const byOrigin = new Map<string, Set<string>>(
+    Object.entries(grouped).map(([origin, dests]) => [origin, new Set(dests)])
+  );
   const order = (c: string) => {
     const i = COUNTRIES.indexOf(c);
     return i === -1 ? 999 : i;

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Daily membership housekeeping: renewal reminders, then expiring lapsed
+# Premium. The self-hosted replacement for the Vercel Cron in vercel.json.
+#
+# Runs from /etc/cron.d/portiquote as root, because the secret lives in the
+# root-only /opt/portiquote/.env.
+#
+# Safe to run alongside Vercel's cron while both deployments exist: reminders
+# are marked sent in the database, and the two are scheduled 30 minutes apart,
+# so whichever runs second finds nothing left to do.
+
+set -euo pipefail
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV=/opt/portiquote/.env
+SECRET="$(sed -n 's/^CRON_SECRET=//p' "$ENV" | tr -d '"' | tail -1)"
+PORT="$(sed -n 's/^PORTIQUOTE_HOST_PORT=//p' "$ENV" | tr -d '"' | tail -1)"
+[ -n "$SECRET" ] || { echo "portiquote-cron: CRON_SECRET missing from $ENV" >&2; exit 1; }
+
+# The secret goes through a header file, not the command line, so it never
+# appears in the process list.
+HDR="$(mktemp)"; trap 'rm -f "$HDR"' EXIT
+printf 'Authorization: Bearer %s\n' "$SECRET" > "$HDR"
+
+curl -fsS --max-time 300 -H @"$HDR" "http://127.0.0.1:${PORT:-3100}/api/cron/memberships"
+echo
