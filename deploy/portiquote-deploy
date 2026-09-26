@@ -1,83 +1,179 @@
 #!/usr/bin/env bash
 #
-# Deploys the latest main to https://portiquote.com.
+# Deploys a published image to one PortiQuote environment.
 #
-#     sudo portiquote-deploy
+#     sudo portiquote-deploy staging sha-1a2b3c4
+#     sudo portiquote-deploy production v1.2.0
+#     sudo portiquote-deploy production            # re-deploy the recorded tag
 #
-# Installed root-owned to /usr/local/sbin by setup-server.sh. It takes no
-# arguments on purpose: a sudoers rule can then grant exactly this command to a
-# CI account without granting anything else.
+# Installed root-owned to /usr/local/sbin by setup-server.sh.
 #
-# If the new build fails its health check, the previous image is put back.
+# It pulls; it never builds. The image comes from GHCR exactly as CI published
+# it, so production can run the byte-identical artefact staging was tested on.
+#
+# On a failed health check the previous tag is put back. Note what that does and
+# does not cover: the CONTAINER rolls back, the DATABASE does not. Migrations are
+# expand-only for that reason — add columns and tables, never drop or rename in
+# the same release as the code that stops using them — so the previous image can
+# still run against the newer schema. A release that has to change what a column
+# means takes two deploys, not a rollback.
 
 set -euo pipefail
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-ROOT=/opt/portiquote
-SRC="${ROOT}/src"
-BRANCH=main
+usage() { echo "usage: portiquote-deploy {production|staging} [tag]" >&2; exit 2; }
+
+ENV="${1:-}"
+WANT_TAG="${2:-}"
+case "$ENV" in
+    production|staging) ;;
+    *) usage ;;
+esac
+
+ROOT="/opt/portiquote/${ENV}"
 LOG="${ROOT}/deploy.log"
 
-die() { echo "deploy: $*" >&2; echo "$(date '+%F %T')  FAILED  $*" >> "$LOG"; exit 1; }
+die() {
+    echo "deploy: $*" >&2
+    echo "$(date '+%F %T')  FAILED  $*" >> "$LOG"
+    exit 1
+}
 
 [ "$(id -u)" -eq 0 ] || { echo "Run with sudo." >&2; exit 1; }
+[ -d "$ROOT" ] || die "no ${ROOT} — run setup-server.sh first"
 cd "$ROOT"
 
-exec 9> /run/portiquote-deploy.lock
-flock -n 9 || die "another deploy is already running"
+# One deploy per environment at a time; the two may overlap freely.
+exec 9> "/run/portiquote-deploy.${ENV}.lock"
+flock -n 9 || die "another ${ENV} deploy is already running"
 
-[ -f .env ] || die "no ${ROOT}/.env — copy deploy/env.production.example and fill it in"
-# An unfilled template builds fine and then fails at runtime in confusing ways.
-if grep -qE '=(your-|YOUR-|sk_test_\.\.\.|whsec_\.\.\.|generate-)' .env; then
-    die ".env still has template placeholders: $(grep -oE '^[A-Z_]+=(your-|YOUR-|sk_test_|whsec_|generate-)' .env | cut -d= -f1 | tr '\n' ' ')"
-fi
-HOST_PORT="$(sed -n 's/^PORTIQUOTE_HOST_PORT=//p' .env | tr -d '"' | tail -1)"
-HOST_PORT="${HOST_PORT:-3100}"
+[ -f .env ] || die "no ${ROOT}/.env — copy deploy/env.example and fill it in"
 
-git -C "$SRC" fetch --quiet origin "$BRANCH" \
-    || die "cannot fetch from GitHub — check the deploy key (re-run setup-server.sh to diagnose)"
-git -C "$SRC" reset --quiet --hard "origin/${BRANCH}"
-REV="$(git -C "$SRC" log -1 --format='%h %s' | cut -c1-72)"
-echo "Deploying ${REV}"
+envval() { sed -n "s/^$1=//p" .env | tr -d '"' | tail -1; }
 
-if docker image inspect portiquote-web:latest > /dev/null 2>&1; then
-    docker tag portiquote-web:latest portiquote-web:previous
-    HAVE_PREVIOUS=1
-else
-    HAVE_PREVIOUS=0
-fi
+# An unfilled template starts fine and then fails in confusing ways later.
+MISSING=""
+for key in APP_ENV APP_ORIGIN IMAGE PORT_APP PORT_SUPABASE POSTGRES_PASSWORD \
+           JWT_SECRET ANON_KEY SUPABASE_SERVICE_ROLE_KEY REALTIME_DB_ENC_KEY \
+           SECRET_KEY_BASE SMTP_HOST SMTP_USER SMTP_PASS CRON_SECRET; do
+    [ -n "$(envval "$key")" ] || MISSING="${MISSING} ${key}"
+done
+[ -z "$MISSING" ] || die "empty in ${ROOT}/.env:${MISSING}"
 
-docker compose build --pull web || die "build failed at ${REV} (site still on the previous version)"
-docker compose up -d web
+[ "$(envval APP_ENV)" = "$ENV" ] \
+    || die "APP_ENV in ${ROOT}/.env is '$(envval APP_ENV)', not '${ENV}'"
 
-# Two checks. robots.txt proves Node is serving. /directory is rendered per
-# request from Supabase, so it proves the container can reach the database —
-# a container with broken outbound networking passes the first and fails this.
+IMAGE="$(envval IMAGE)"
+PREV_TAG="$(envval IMAGE_TAG)"
+TAG="${WANT_TAG:-$PREV_TAG}"
+[ -n "$TAG" ] || die "no tag given and IMAGE_TAG is empty in ${ROOT}/.env"
+
+PORT_APP="$(envval PORT_APP)"
+PORT_SUPABASE="$(envval PORT_SUPABASE)"
+
+echo "Deploying ${IMAGE}:${TAG} to ${ENV}"
+
+# ---------------------------------------------------------------------- pull --
+# First, so a bad tag or a registry outage costs nothing: nothing has stopped
+# yet. A private GHCR package fails here with "denied".
+docker pull --quiet "${IMAGE}:${TAG}" > /dev/null \
+    || die "cannot pull ${IMAGE}:${TAG} (wrong tag, or the GHCR package is private)"
+DIGEST="$(docker image inspect --format '{{index .RepoDigests 0}}' "${IMAGE}:${TAG}" 2>/dev/null || echo 'unknown@unknown')"
+echo "  digest ${DIGEST##*@}"
+
+# ------------------------------------------------------------------ database --
+# Up first and on its own: migrations have to land before the code that needs
+# them starts serving.
+docker compose up -d db
+for _ in $(seq 1 30); do
+    [ "$(docker compose ps db --format '{{.Health}}' 2>/dev/null)" = healthy ] && break
+    sleep 2
+done
+[ "$(docker compose ps db --format '{{.Health}}' 2>/dev/null)" = healthy ] \
+    || { docker compose logs --tail 30 db; die "database did not become healthy"; }
+
+# ---------------------------------------------------------------- migrations --
+# Taken from the image being deployed rather than from a checkout, so schema and
+# code are one artefact and cannot disagree about a version. Copied INTO the
+# existing directory, not over it: Compose has it bind-mounted, and replacing the
+# directory would leave the container pointing at the old inode.
+install -d -o root -g root -m 755 "${ROOT}/migrations"
+CID="$(docker create "${IMAGE}:${TAG}")"
+docker cp "${CID}:/app/migrations/." "${ROOT}/migrations/" \
+    || { docker rm -f "$CID" > /dev/null; die "image ${TAG} carries no /app/migrations"; }
+docker rm -f "$CID" > /dev/null
+
+psql_q() { docker compose exec -T db psql -qtAX -U postgres -d postgres "$@"; }
+
+psql_q -v ON_ERROR_STOP=1 -c "
+    CREATE TABLE IF NOT EXISTS public.schema_migrations (
+        filename   text        PRIMARY KEY,
+        applied_at timestamptz NOT NULL DEFAULT now()
+    );" > /dev/null || die "cannot reach the database to record migrations"
+
+APPLIED=0
+for path in "${ROOT}"/migrations/*.sql; do
+    [ -e "$path" ] || break
+    name="$(basename "$path")"
+    if [ "$(psql_q -c "SELECT 1 FROM public.schema_migrations WHERE filename = '${name}';")" = 1 ]; then
+        continue
+    fi
+    echo "  applying ${name}"
+    # One transaction per migration: a failure part way leaves nothing behind and
+    # the filename unrecorded, so the next attempt starts from a clean state.
+    if ! docker compose exec -T db psql -qX -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 --single-transaction -f "/migrations/${name}"; then
+        die "migration ${name} failed — nothing was started, the site is untouched"
+    fi
+    psql_q -c "INSERT INTO public.schema_migrations (filename) VALUES ('${name}');" > /dev/null
+    APPLIED=$((APPLIED + 1))
+done
+[ "$APPLIED" -eq 0 ] && echo "  schema already up to date"
+
+# --------------------------------------------------------------------- start --
+# Written before starting, so .env always records what is actually running and a
+# bare `portiquote-deploy <env>` repeats it.
+sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${TAG}|" .env
+docker compose up -d
+
+# --------------------------------------------------------------- healthcheck --
+# Three checks, each proving something the one before it does not:
+#   /auth/v1/health  the Supabase side is up at all
+#   /robots.txt      Node is serving
+#   /directory       rendered per request from the database, so the app really
+#                    can reach Postgres through the gateway
 healthy() {
-    local path code
+    local code path
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+        "http://127.0.0.1:${PORT_SUPABASE}/auth/v1/health")"
+    [ "$code" = 200 ] || { echo "  supabase /auth/v1/health -> ${code}"; return 1; }
     for path in /robots.txt /directory; do
-        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "http://127.0.0.1:${HOST_PORT}${path}")"
-        [ "$code" = 200 ] || { echo "  ${path} -> ${code}"; return 1; }
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+            "http://127.0.0.1:${PORT_APP}${path}")"
+        [ "$code" = 200 ] || { echo "  app ${path} -> ${code}"; return 1; }
     done
 }
 
-# Up to ~3 minutes: a start-up takes seconds, so this only runs long when
+# Up to ~90s. A healthy start takes seconds, so this only runs long when
 # something is genuinely wrong.
-for _ in $(seq 1 12); do
-    if healthy > /dev/null; then
-        echo "$(date '+%F %T')  ok  ${REV}" >> "$LOG"
+for _ in $(seq 1 30); do
+    if healthy > /dev/null 2>&1; then
+        echo "$(date '+%F %T')  ok  ${TAG}  ${DIGEST##*@}" >> "$LOG"
         docker image prune -f > /dev/null
-        echo "Live: ${REV}"
+        echo "Live on ${ENV}: ${TAG}"
         exit 0
     fi
     sleep 3
 done
 
-echo "Health check failed:"; healthy || true
+echo "Health check failed:"
+healthy || true
 docker compose logs --tail 40 web || true
-if [ "$HAVE_PREVIOUS" -eq 1 ]; then
-    docker tag portiquote-web:previous portiquote-web:latest
-    docker compose up -d --no-build web
-    die "${REV} failed its health check; rolled back to the previous image"
+
+if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ]; then
+    echo "Rolling back to ${PREV_TAG}"
+    sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${PREV_TAG}|" .env
+    docker compose up -d web
+    die "${TAG} failed its health check; rolled back to ${PREV_TAG}"
 fi
-die "${REV} failed its health check and there is no previous image to roll back to"
+die "${TAG} failed its health check and there is no previous tag to roll back to"

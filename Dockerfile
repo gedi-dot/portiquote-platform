@@ -38,6 +38,10 @@ ENV NODE_ENV=production \
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+# Carried in the image so the schema and the code that expects it are one
+# artefact and cannot disagree about a version. portiquote-deploy extracts these
+# and applies them before starting the new container.
+COPY --from=build --chown=node:node /app/migrations ./migrations
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
