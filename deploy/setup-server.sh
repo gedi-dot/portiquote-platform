@@ -21,6 +21,8 @@
 #   /opt/portiquote/staging/        the same, on its own ports and secrets
 #   /usr/local/sbin/portiquote-deploy
 #   /usr/local/sbin/portiquote-cron
+#   /usr/local/sbin/portiquote-ci-deploy   forced command for GitHub Actions
+#   /etc/sudoers.d/portiquote-ci           …and the one thing it may sudo
 #   /etc/cron.d/portiquote         06:30 UTC membership housekeeping
 
 set -euo pipefail
@@ -176,6 +178,41 @@ install -o root -g root -m 755 "${HERE}/portiquote-deploy" /usr/local/sbin/porti
 install -o root -g root -m 755 "${HERE}/portiquote-cron"   /usr/local/sbin/portiquote-cron
 install -o root -g root -m 755 "${HERE}/portiquote-backup" /usr/local/sbin/portiquote-backup
 ok "portiquote-deploy, portiquote-cron, portiquote-backup installed"
+
+# ----------------------------------------------------------- CI deploy user ---
+# GitHub Actions deploys over SSH as deploy-portiquote. Its one key is bound to
+# portiquote-ci-deploy as a forced command, and sudo lets it run portiquote-deploy
+# with a staging commit build or a production tag and nothing else. Not in the
+# docker group: that group is root-equivalent.
+#
+# The key itself is not created here. Generate it where GitHub's secret will be
+# set, and append the PUBLIC half to the authorized_keys created below, prefixed
+# exactly as in the comment at the top of portiquote-ci-deploy.
+say "CI deploy account"
+install -o root -g root -m 755 "${HERE}/portiquote-ci-deploy" /usr/local/sbin/portiquote-ci-deploy
+if ! id deploy-portiquote > /dev/null 2>&1; then
+    # A normal shell: sshd runs the forced command through it. No password, so
+    # the key is the only way in.
+    useradd --create-home --shell /bin/bash deploy-portiquote
+fi
+# sshd's AllowGroups on this server admits only sshusers.
+usermod -aG sshusers deploy-portiquote
+H="$(getent passwd deploy-portiquote | cut -d: -f6)"
+install -d -o deploy-portiquote -g deploy-portiquote -m 700 "${H}/.ssh"
+[ -f "${H}/.ssh/authorized_keys" ] \
+    || install -o deploy-portiquote -g deploy-portiquote -m 600 /dev/null "${H}/.ssh/authorized_keys"
+
+TMP_SUDOERS="$(mktemp)"
+cp "${HERE}/sudoers-portiquote-ci" "$TMP_SUDOERS"
+# Checked before it goes live: a sudoers file with a syntax error breaks sudo for
+# every administrator on the box, not just this rule.
+visudo -cq -f "$TMP_SUDOERS" || { rm -f "$TMP_SUDOERS"; die "sudoers-portiquote-ci does not parse"; }
+install -o root -g root -m 440 "$TMP_SUDOERS" /etc/sudoers.d/portiquote-ci
+rm -f "$TMP_SUDOERS"
+ok "deploy-portiquote, /usr/local/sbin/portiquote-ci-deploy, /etc/sudoers.d/portiquote-ci"
+if [ ! -s "${H}/.ssh/authorized_keys" ]; then
+    note "no key yet in ${H}/.ssh/authorized_keys — CI cannot deploy until one is added"
+fi
 
 cat > /etc/cron.d/portiquote <<EOF
 # Cron needs an explicit PATH; the one it supplies does not include docker.

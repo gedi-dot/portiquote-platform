@@ -160,15 +160,44 @@ happily on a vhost that never picked the snippet up.
 
 ## Deploying
 
-Staging follows `main`; production runs a tag.
+Automatic. Staging follows `main`; production runs a tag.
 
 ```bash
-# every push to main publishes ghcr.io/…:sha-<commit> and :main
-sudo portiquote-deploy staging main
+# merge to main  -> CI builds sha-<commit> and deploys it to staging
+# once staging looks right, tag that same commit:
+git tag v1.0.1 <commit> && git push origin v1.0.1
+#                -> CI re-tags the image and deploys it to production
+```
 
-# then, once it looks right, tag the same commit and promote it
-git tag v1.0.0 && git push origin v1.0.0
-sudo portiquote-deploy production v1.0.0
+Production tags must be exactly `v<major>.<minor>.<patch>`. The server refuses
+anything else, including `-rc` suffixes. Each run shows up under the repository's
+**Environments** (staging, production), and its log is `portiquote-deploy`'s own
+output.
+
+**How CI gets in.** The `deploy` job in `.github/workflows/release.yml` SSHes to
+srv1 as `deploy-portiquote`, the same pattern as the server's other `deploy-*`
+accounts. That account can do one thing:
+
+- Its only key is bound to `/usr/local/sbin/portiquote-ci-deploy` as a forced
+  command with `restrict`: no shell, no pty, no port forwarding.
+- The wrapper accepts `staging sha-<40 hex>` or `production v<x.y.z>` and nothing
+  else.
+- `/etc/sudoers.d/portiquote-ci` lets it run `portiquote-deploy` with exactly those
+  argument shapes, as a second lock.
+- It is **not** in the `docker` group, which would be root-equivalent.
+
+The server still pulls the image and still holds every application secret; CI
+only names the build. Two repository secrets feed it: `DEPLOY_SSH_KEY` (the
+private key; the only copy is in GitHub) and `DEPLOY_KNOWN_HOSTS` (srv1's pinned
+host keys). To rotate the key, generate a new pair, replace the line in
+`/home/deploy-portiquote/.ssh/authorized_keys` keeping its
+`command="…",restrict` prefix, and update the secret.
+
+**By hand**, which is still how to redeploy or roll back:
+
+```bash
+sudo portiquote-deploy staging sha-<commit>
+sudo portiquote-deploy production v1.0.0     # an earlier tag = a rollback
 ```
 
 The `v*` tag does **not** rebuild. CI re-tags the digest that was already built

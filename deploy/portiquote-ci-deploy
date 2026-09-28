@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# The only thing GitHub Actions can run on this server. Installed root-owned to
+# /usr/local/sbin by setup-server.sh, and wired up as a FORCED command on the
+# deploy-portiquote account's single key:
+#
+#   command="/usr/local/sbin/portiquote-ci-deploy",restrict ssh-ed25519 AAAA… github-actions@portiquote
+#
+# So whatever the client asks to run arrives here as SSH_ORIGINAL_COMMAND, as
+# text, and nothing else ever executes. `restrict` removes the pty, port and
+# agent forwarding. The account is deliberately NOT in the docker group — that
+# group is root-equivalent — and its sudo is limited to portiquote-deploy with
+# the two argument shapes below (see /etc/sudoers.d/portiquote-ci).
+#
+# Accepted, exactly:
+#
+#   staging sha-<40 hex>        what CI publishes on every push to main
+#   production v<x.y.z>         a release tag, re-tagged from a main build
+#
+# Staging takes a commit rather than :main so the log names the build that went
+# out, and a slow deploy cannot pick up a newer :main than the run it belongs to.
+
+set -euo pipefail
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Word-split on purpose: the command is two plain tokens, and anything with
+# quoting, globbing or a third word is refused below anyway.
+set -f
+# shellcheck disable=SC2086
+set -- ${SSH_ORIGINAL_COMMAND:-}
+set +f
+
+# Best effort. This server's /dev/log is not writable by unprivileged accounts,
+# and under `set -e` a failing logger would abort a perfectly valid deploy. The
+# deploy itself is recorded in /opt/portiquote/<env>/deploy.log regardless.
+log() { logger -t portiquote-ci-deploy "$*" 2>/dev/null || true; }
+
+refuse() {
+    echo "portiquote-ci-deploy: refused: ${SSH_ORIGINAL_COMMAND:-<empty>}" >&2
+    echo "usage: staging sha-<40 hex> | production v<x.y.z>" >&2
+    log "refused: ${SSH_ORIGINAL_COMMAND:-<empty>}"
+    exit 2
+}
+
+[ "$#" -eq 2 ] || refuse
+case "$1" in
+    staging)    [[ "$2" =~ ^sha-[0-9a-f]{40}$ ]] || refuse ;;
+    production) [[ "$2" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || refuse ;;
+    *)          refuse ;;
+esac
+
+log "deploying $2 to $1"
+exec sudo -n /usr/local/sbin/portiquote-deploy "$1" "$2"

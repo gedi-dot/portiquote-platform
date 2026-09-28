@@ -67,6 +67,10 @@ IMAGE="$(envval IMAGE)"
 PREV_TAG="$(envval IMAGE_TAG)"
 TAG="${WANT_TAG:-$PREV_TAG}"
 [ -n "$TAG" ] || die "no tag given and IMAGE_TAG is empty in ${ROOT}/.env"
+# The tag is written into .env with sed below; a `|` or a newline in it would
+# rewrite other lines of a root-owned file of secrets. Docker's own tag grammar
+# is narrower than this anyway.
+[[ "$TAG" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || die "not a valid image tag: ${TAG}"
 
 PORT_APP="$(envval PORT_APP)"
 PORT_SUPABASE="$(envval PORT_SUPABASE)"

@@ -2,16 +2,27 @@ name: Release
 
 # Build once, promote by tag.
 #
-#   push to main  -> builds and publishes ghcr.io/…:sha-<commit> (and :main)
-#   push of v*    -> re-tags that same digest as :v<x.y.z>, without rebuilding
+#   push to main  -> builds ghcr.io/…:sha-<commit> (and :main), deploys it to staging
+#   push of v*    -> re-tags that same digest as :v<x.y.z>, without rebuilding,
+#                    and deploys it to production
 #
 # Re-tagging rather than rebuilding is the point: production runs the byte
 # identical image that was tested on staging. A second build of the same source
 # can still differ — a base image moves, a transitive dependency resolves
 # differently — and then "it worked on staging" stops meaning anything.
 #
-# Nothing here deploys. The server pulls, because it holds the secrets and
-# decides when to switch, and because CI has no route into it.
+# Deploying is one SSH command to srv1 as deploy-portiquote. That account can do
+# nothing but run `portiquote-deploy staging sha-<40 hex>` or
+# `portiquote-deploy production v<x.y.z>` — its key is bound to a forced command
+# and sudo allows only those argument shapes (deploy/portiquote-ci-deploy,
+# deploy/sudoers-portiquote-ci). The server still pulls the image itself and
+# still holds every application secret; CI only says which build to run.
+#
+# Needs two repository secrets:
+#   DEPLOY_SSH_KEY      the private half of that account's key
+#   DEPLOY_KNOWN_HOSTS  srv1's host keys, so the first connection cannot be
+#                       intercepted (ssh-keyscan output, checked against the
+#                       server's own fingerprints)
 
 on:
   push:
@@ -21,6 +32,8 @@ on:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
+  DEPLOY_HOST: 158.220.113.77
+  DEPLOY_USER: deploy-portiquote
 
 jobs:
   build:
@@ -59,14 +72,6 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
 
-      - name: Report the tag to deploy
-        run: |
-          echo "### Built \`sha-${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo '' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Deploy to staging on srv1:' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          echo 'sudo portiquote-deploy staging sha-${{ github.sha }}' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
 
   promote:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -99,11 +104,70 @@ jobs:
           docker buildx imagetools create --tag "$DST" "$SRC"
           docker buildx imagetools inspect "$DST" | head -5
 
-      - name: Report the tag to deploy
+  # One job for both environments: a push to main deploys its own commit build to
+  # staging, a v* tag deploys the re-tagged image to production. Exactly one of
+  # build/promote runs per trigger, so the other is always skipped — hence the
+  # explicit condition, since a skipped `needs` would otherwise skip this too.
+  deploy:
+    needs: [build, promote]
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
+      url: ${{ startsWith(github.ref, 'refs/tags/') && 'https://portiquote.com' || 'https://staging.portiquote.com' }}
+    # Queued, never cancelled: portiquote-deploy holds a per-environment lock and
+    # refuses a second run outright, and cancelling a deploy half way leaves the
+    # server to roll itself back. Two quick merges therefore deploy in order.
+    concurrency:
+      group: deploy-${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
+      cancel-in-progress: false
+    timeout-minutes: 20
+    steps:
+      - name: Deploy
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
-          echo "### ${{ github.ref_name }} is ready" >> "$GITHUB_STEP_SUMMARY"
-          echo '' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Same digest as the image staging has been running. On srv1:' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          echo 'sudo portiquote-deploy production ${{ github.ref_name }}' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TARGET=production; TAG="$GITHUB_REF_NAME"
+          else
+            TARGET=staging;    TAG="sha-${GITHUB_SHA}"
+          fi
+
+          if [ -z "$SSH_KEY" ] || [ -z "$KNOWN_HOSTS" ]; then
+            echo "::error::DEPLOY_SSH_KEY or DEPLOY_KNOWN_HOSTS is not set. Deploy by hand on srv1: sudo portiquote-deploy ${TARGET} ${TAG}"
+            exit 1
+          fi
+
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY"     > ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+
+          echo "Deploying ${TAG} to ${TARGET}"
+          # The server runs a forced command, so this string is only ever parsed
+          # as "<environment> <tag>" and checked against a fixed pattern there.
+          # Its output is portiquote-deploy's own, streamed into this log.
+          ssh -i ~/.ssh/deploy_key \
+              -o BatchMode=yes -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -o ServerAliveInterval=30 \
+              "${DEPLOY_USER}@${DEPLOY_HOST}" "${TARGET} ${TAG}"
+
+          {
+            echo "### Live on ${TARGET}: \`${TAG}\`"
+            echo ''
+            if [ "$TARGET" = staging ]; then
+              echo 'To release this exact build to production, tag the commit:'
+              echo '```'
+              echo "git tag vX.Y.Z ${GITHUB_SHA} && git push origin vX.Y.Z"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
