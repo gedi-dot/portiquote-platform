@@ -1,0 +1,14 @@
+# Installed as /etc/sudoers.d/portiquote-ci (root:root 0440) by setup-server.sh.
+#
+# GitHub Actions' deploy account may run portiquote-deploy as root, and nothing
+# else, and only with a staging commit build or a production release tag. The
+# forced-command wrapper checks the same shapes first; this is the second lock,
+# in case the account is ever reached some other way.
+#
+# Regex arguments (^…$) need sudo 1.9.10 or later; this server has 1.9.15. A
+# plain `*` wildcard here would also match spaces and extra arguments.
+
+Defaults:deploy-portiquote !requiretty, env_reset
+
+deploy-portiquote ALL=(root) NOPASSWD: /usr/local/sbin/portiquote-deploy ^staging sha-[0-9a-f]{40}$, \
+                                       /usr/local/sbin/portiquote-deploy ^production v[0-9]+\.[0-9]+\.[0-9]+$
