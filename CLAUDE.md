@@ -31,6 +31,35 @@ it; don't add anything new that depends on Vercel.
 Deploys show under the repo's Actions tab and Environments. Rolling back is
 deploying an earlier tag (DEPLOY.md, "Deploying").
 
+## What needs server access, and what doesn't
+
+**Normal development and releases need no access to srv1.** Code changes,
+migrations, PRs, merging (→ staging) and tagging (→ production) all happen
+through GitHub. CI deploys over SSH as a restricted account whose key lives in
+GitHub's secrets, so nobody working on the app needs a server login. Don't tell
+the developer they are blocked on srv1 for any of this.
+
+Only these need someone with sudo on srv1:
+
+- **Changes under `deploy/`** — they are installed on the server by hand (see
+  Rules below).
+- **Loading or fixing data directly in a database** — imports, bulk seeding
+  (e.g. `scripts/seed-unclaimed.py`, whose output was written for Supabase's SQL
+  Editor), restores, one-off SQL. The self-hosted setup has no Supabase
+  dashboard or SQL editor, and Postgres listens only inside the server, so this
+  runs as `docker compose exec db psql` in `/opt/portiquote/<env>/`. Schema
+  changes are not in this list: they go in `migrations/` and ship with a deploy.
+- **Server configuration** — nginx, `.env` values, cron, backups.
+
+For any of these, prepare the exact commands and hand them over; don't stop
+other work waiting for them.
+
+Known open item: both databases started empty when the site moved off Vercel.
+The forwarder listings and accounts still live in the old hosted Supabase
+project and have not been migrated; production's directory is empty until
+they are. That migration (data plus `auth.users`, since every profile is tied to
+a login) is a server task as above.
+
 ## Rules
 
 - **Migrations** are new numbered files in `migrations/`
@@ -50,7 +79,7 @@ deploying an earlier tag (DEPLOY.md, "Deploying").
   `supabase/gateway.conf`, the nginx snippets and the server scripts need a manual
   install on the server; DEPLOY.md says how for each. Whenever a change touches
   `deploy/`, say so and list the server steps — they need someone with sudo on
-  srv1.
+  srv1. This applies to `deploy/` only, not to app code.
 - **Secrets never go in the repo.** They live in `/opt/portiquote/<env>/.env` on
   the server and in GitHub repository secrets. `.env.example` holds placeholders and sandbox values only.
 - Keep local development working: `npm install`, `npm run dev` against a Supabase
