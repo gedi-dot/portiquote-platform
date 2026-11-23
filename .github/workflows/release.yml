@@ -64,6 +64,10 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:sha-${{ github.sha }}
             ${{ env.IMAGE }}:main
+          # Names the commit inside the image itself. portiquote-deploy reads it
+          # to record which commit a production v* re-tag is.
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
           # The build needs no database and no secrets: everything
           # environment-specific is read at runtime. Only the canonical site URL
           # is baked in, and it is the same in every environment by design —

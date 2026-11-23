@@ -92,6 +92,68 @@ echo "  digest ${DIGEST##*@}"
 # That means .env briefly names a tag that is not yet running, so every failure
 # path from here on has to put the old one back. The trap does that, rather than
 # each `die` having to remember to.
+# --------------------------------------------------------- deployment history --
+# Only on a server that has NgamiaCloud's journal helper AND a root marker for
+# this environment (/etc/ngamiacloud/deployments/portiquote-<env>/history-enabled).
+# Elsewhere this whole block is inert.
+#
+# A record is started here, after the pull and before anything changes, and the
+# exit trap below completes it: health_verified only when the health check
+# passed, command_failed otherwise (including a rollback). If the commit cannot
+# be established the deploy is refused now, rather than run without a record.
+HISTORY_HELPER=/usr/local/libexec/ngamia_deployment_journal.py
+HISTORY_KEY="portiquote-${ENV}"
+HISTORY_MARKER="/etc/ngamiacloud/deployments/${HISTORY_KEY}/history-enabled"
+HISTORY_ID=""
+
+# Prints the full commit the image was built from.
+#   1. the image's org.opencontainers.image.revision label (set by CI);
+#   2. else the commit in a staging tag, sha-<40 hex>;
+#   3. else, for a production re-tag, the one local sha-<commit> tag with the
+#      same image ID (staging pulled it before the release was promoted).
+# A label that disagrees with a sha- tag, or an ambiguous match, is refused.
+history_commit() {
+    local label tagsha="" id match
+    label="$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "${IMAGE}:${TAG}" 2>/dev/null || true)"
+    if [[ "$TAG" =~ ^sha-([0-9a-f]{40})$ ]]; then tagsha="${BASH_REMATCH[1]}"; fi
+    if [[ "$label" =~ ^[0-9a-f]{40}$ ]]; then
+        [ -z "$tagsha" ] || [ "$tagsha" = "$label" ] || return 1
+        echo "$label"; return 0
+    fi
+    if [ -n "$tagsha" ]; then echo "$tagsha"; return 0; fi
+    id="$(docker image inspect --format '{{.Id}}' "${IMAGE}:${TAG}" 2>/dev/null)" || return 1
+    match="$(docker image ls --no-trunc --format '{{.Tag}} {{.ID}}' "$IMAGE" \
+        | awk -v id="$id" '$2 == id && $1 ~ /^sha-[0-9a-f]+$/ && length($1) == 44 { print substr($1, 5) }' | sort -u)"
+    [ -n "$match" ] && [ "$(printf '%s\n' "$match" | wc -l)" -eq 1 ] || return 1
+    echo "$match"
+}
+
+# A marker without its helper means recording is wanted but impossible: refuse.
+if [ -e "$HISTORY_MARKER" ] && [ ! -x "$HISTORY_HELPER" ]; then
+    die "deployment history is enabled but its helper is missing — nothing was changed"
+fi
+if [ -x "$HISTORY_HELPER" ]; then
+    HISTORY_STATE="$(/usr/bin/python3 -I "$HISTORY_HELPER" enabled "$HISTORY_KEY")" \
+        || die "deployment history configuration is invalid — nothing was changed"
+    if [ "$HISTORY_STATE" = enabled ]; then
+        COMMIT="$(history_commit)" \
+            || die "cannot establish which commit ${TAG} was built from, so it cannot be recorded — nothing was changed"
+        HISTORY_ID="$(/usr/bin/python3 -I "$HISTORY_HELPER" begin "$HISTORY_KEY" "$COMMIT")" \
+            || die "could not record the start of this deployment — nothing was changed"
+        echo "  recording deployment of ${COMMIT:0:12}"
+    fi
+fi
+
+finish_history() {
+    [ -n "$HISTORY_ID" ] || return 0
+    local result=command_failed
+    if [ "$DEPLOYED" -eq 1 ]; then result=health_verified; fi
+    /usr/bin/python3 -I "$HISTORY_HELPER" finish "$HISTORY_KEY" "$HISTORY_ID" "$result" && return 0
+    echo "deploy: could not record the outcome (${result}); the history entry stays 'started'" >&2
+    echo "$(date '+%F %T')  HISTORY  outcome ${result} not recorded for ${TAG}" >> "$LOG"
+    return 1
+}
+
 DEPLOYED=0
 restore_tag() {
     [ "$DEPLOYED" -eq 1 ] && return 0
@@ -99,7 +161,15 @@ restore_tag() {
     sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${PREV_TAG}|" .env
     echo "deploy: .env left at ${PREV_TAG}" >&2
 }
-trap restore_tag EXIT
+# Also completes the history record. A deploy whose outcome could not be
+# recorded exits non-zero even when the site is live, so CI shows it.
+on_exit() {
+    local rc=$?
+    restore_tag || true
+    finish_history || [ "$rc" -ne 0 ] || rc=1
+    exit "$rc"
+}
+trap on_exit EXIT
 
 sed -i "s|^IMAGE_TAG=.*|IMAGE_TAG=${TAG}|" .env
 
