@@ -170,6 +170,16 @@ services:
       SEED_SELF_HOST: "true"
       RUN_JANITOR: "true"
       DISABLE_HEALTHCHECK_LOGGING: "true"
+    # /healthcheck is realtime's own unauthenticated liveness route ("ok").
+    # The per-tenant health route needs an API key, and a key in a probe would
+    # be visible to anyone who can inspect the container, so it is not used.
+    # 127.0.0.1, not localhost, for the same IPv6 reason as the gateway below.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "3", "-o", "/dev/null", "http://127.0.0.1:4000/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     mem_limit: ${MEM_REALTIME:-384m}
     logging: *logging
 
